@@ -55,111 +55,103 @@ INNER JOIN public.site_location_point AS slp
 
 CREATE OR REPLACE VIEW api.structural_summary AS
 SELECT
-  site_location.site_location_name,
-  structural_summary.phenology_comment,
-  structural_summary.upper_1_dominant,
-  structural_summary.upper_2_dominant,
-  structural_summary.upper_3_dominant,
-  structural_summary.mid_1_dominant,
-  structural_summary.mid_2_dominant,
-  structural_summary.mid_3_dominant,
-  structural_summary.ground_1_dominant,
-  structural_summary.ground_2_dominant,
-  structural_summary.ground_3_dominant,
-  structural_summary.description,
-  structural_summary.mass_flowering_event
-FROM
-  public.site_location,
-  public.site_location_visit,
-  public.structural_summary
-WHERE
-  site_location_visit.site_location_id = site_location.site_location_id AND
-  structural_summary.site_location_visit_id = site_location_visit.site_location_visit_id;
+  sl.site_location_name,
+  ss.phenology_comment,
+  ss.upper_1_dominant,
+  ss.upper_2_dominant,
+  ss.upper_3_dominant,
+  ss.mid_1_dominant,
+  ss.mid_2_dominant,
+  ss.mid_3_dominant,
+  ss.ground_1_dominant,
+  ss.ground_2_dominant,
+  ss.ground_3_dominant,
+  ss.description,
+  ss.mass_flowering_event
+FROM public.site_location AS sl
+INNER JOIN public.site_location_visit AS slv
+  ON slv.site_location_id = sl.site_location_id
+INNER JOIN public.structural_summary AS ss
+  ON ss.site_location_visit_id = slv.site_location_visit_id;
 
 CREATE OR REPLACE VIEW api.soil_bulk_density AS
 SELECT
-  site_location.site_location_name,
-  soil_bulk_density.sample_id,
-  soil_bulk_density.paper_bag_weight,
-  soil_bulk_density.oven_dried_weight_in_bag,
-  soil_bulk_density.ring_weight,
-  soil_bulk_density.gravel_weight,
-  soil_bulk_density.ring_volume,
-  soil_bulk_density.gravel_volume,
-  soil_bulk_density.fine_earth_weight_in_bag,
-  soil_bulk_density.fine_earth_weight,
-  soil_bulk_density.fine_earth_volume,
-  soil_bulk_density.fine_earth_bulk_density,
-  soil_bulk_density.gravel_bulk_density
-FROM
-  public.site_location,
-  public.site_location_visit,
-  public.soil_bulk_density
-WHERE
-  site_location_visit.site_location_id = site_location.site_location_id AND
-  soil_bulk_density.site_location_visit_id = site_location_visit.site_location_visit_id;
+  sl.site_location_name,
+  sbd.sample_id,
+  sbd.paper_bag_weight,
+  sbd.oven_dried_weight_in_bag,
+  sbd.ring_weight,
+  sbd.gravel_weight,
+  sbd.ring_volume,
+  sbd.gravel_volume,
+  sbd.fine_earth_weight_in_bag,
+  sbd.fine_earth_weight,
+  sbd.fine_earth_volume,
+  sbd.fine_earth_bulk_density,
+  sbd.gravel_bulk_density
+FROM public.site_location AS sl
+INNER JOIN public.site_location_visit AS slv
+  ON slv.site_location_id = sl.site_location_id
+INNER JOIN public.soil_bulk_density as sbd
+  ON sbd.site_location_visit_id = slv.site_location_visit_id;
 
 CREATE OR REPLACE VIEW api.soil_characterisation AS
 SELECT
-  site_location.site_location_name,
-  soil_characterisation.upper_depth,
-  soil_characterisation.lower_depth,
-  soil_characterisation.horizon,
-  soil_characterisation.texture_grade,
-  soil_characterisation.texture_qualifier,
-  soil_characterisation.texture_modifier,
-  soil_characterisation.colour_when_moist,
-  soil_characterisation.colour_when_dry,
-  soil_characterisation.mottles_colour,
-  soil_characterisation.mottles_abundance,
-  soil_characterisation.mottles_size,
-  soil_characterisation.segregations_abundance,
-  soil_characterisation.segregations_size,
-  soil_characterisation.segregations_nature,
-  soil_characterisation.segregations_form,
-  soil_characterisation.comments,
-  soil_characterisation.collected_by,
-  soil_characterisation.smallest_size_1,
-  soil_characterisation.smallest_size_2,
-  soil_characterisation.effervescence,
-  soil_characterisation.ec,
-  soil_characterisation.ph,
-  soil_characterisation.pedality_grade,
-  soil_characterisation.pedality_fabric,
-  soil_characterisation.next_size_type_2,
-  soil_characterisation.next_size_type_1,
-  soil_characterisation.smallest_size_type_2,
-  soil_characterisation.smallest_size_type_1,
-  soil_characterisation.next_size_2,
-  soil_characterisation.next_size_1,
-  soil_characterisation.layer_barcode
-FROM
-  public.site_location,
-  public.site_location_visit,
-  public.soil_characterisation
-WHERE
-  site_location_visit.site_location_id = site_location.site_location_id AND
-  soil_characterisation.site_location_visit_id = site_location_visit.site_location_visit_id;
+  sl.site_location_name,
+  sc.upper_depth,
+  sc.lower_depth,
+  sc.horizon,
+  sc.texture_grade,
+  sc.texture_qualifier,
+  sc.texture_modifier,
+  sc.colour_when_moist,
+  sc.colour_when_dry,
+  sc.mottles_colour,
+  sc.mottles_abundance,
+  sc.mottles_size,
+  sc.segregations_abundance,
+  sc.segregations_size,
+  sc.segregations_nature,
+  sc.segregations_form,
+  sc.comments,
+  sc.collected_by,
+  sc.smallest_size_1,
+  sc.smallest_size_2,
+  sc.effervescence,
+  sc.ec,
+  sc.ph,
+  sc.pedality_grade,
+  sc.pedality_fabric,
+  sc.next_size_type_2,
+  sc.next_size_type_1,
+  sc.smallest_size_type_2,
+  sc.smallest_size_type_1,
+  sc.next_size_2,
+  sc.next_size_1,
+  sc.layer_barcode
+FROM public.site_location AS sl
+INNER JOIN public.site_location_visit AS slv
+  ON slv.site_location_id = sl.site_location_id
+INNER JOIN public.soil_characterisation AS sc
+  ON sc.site_location_visit_id = slv.site_location_visit_id;
 
 CREATE OR REPLACE VIEW api.soil_subsite AS
 SELECT
-  site_location.site_location_name,
-  soil_subsite_observations.subsite_id,
-  soil_subsite_observations.zone,
-  soil_subsite_observations.easting,
-  soil_subsite_observations.northing,
-  soil_subsite_observations.ten_to_twenty_barcode,
-  soil_subsite_observations.zero_to_ten_barcode,
-  soil_subsite_observations.twenty_to_thirty_barcode,
-  soil_subsite_observations.comments,
-  soil_subsite_observations.metagenomic_barcode
-FROM
-  public.site_location,
-  public.site_location_visit,
-  public.soil_subsite_observations
-WHERE
-  site_location_visit.site_location_id = site_location.site_location_id AND
-  soil_subsite_observations.site_location_visit_id = site_location_visit.site_location_visit_id;
+  sl.site_location_name,
+  sso.subsite_id,
+  sso.zone,
+  sso.easting,
+  sso.northing,
+  sso.ten_to_twenty_barcode,
+  sso.zero_to_ten_barcode,
+  sso.twenty_to_thirty_barcode,
+  sso.comments,
+  sso.metagenomic_barcode
+FROM public.site_location AS sl
+INNER JOIN public.site_location_visit AS slv
+  ON slv.site_location_id = sl.site_location_id
+INNER JOIN public.soil_subsite_observations AS sso
+  ON sso.site_location_visit_id = slv.site_location_visit_id;
 
 CREATE OR REPLACE VIEW api.veg_voucher AS
 SELECT
@@ -171,58 +163,55 @@ SELECT
   vv.site_location_visit_id,
   vv.field_name,
   gv.primary_gen_barcode
-FROM public.site_location_visit AS slv
-INNER JOIN public.site_location AS sl
-ON slv.site_location_id = sl.site_location_id
+FROM public.site_location AS sl
+INNER JOIN public.site_location_visit AS slv
+  ON slv.site_location_id = sl.site_location_id
 INNER JOIN public.veg_vouchers AS vv
-ON vv.site_location_visit_id = slv.site_location_visit_id
+  ON vv.site_location_visit_id = slv.site_location_visit_id
 LEFT OUTER JOIN public.herbarium_determination AS hd
-ON hd.veg_barcode = vv.veg_barcode
+  ON hd.veg_barcode = vv.veg_barcode
 LEFT OUTER JOIN public.genetic_vouchers AS gv
-ON gv.veg_barcode = vv.veg_barcode;
+  ON gv.veg_barcode = vv.veg_barcode;
 
 CREATE OR REPLACE VIEW api.veg_pi AS
 SELECT
-  site_location.site_location_name,
-  point_intercept.site_location_visit_id,
-  point_intercept.transect,
-  point_intercept.point_number,
-  herbarium_determination.veg_barcode,
-  herbarium_determination.herbarium_determination,
-  point_intercept.substrate,
-  point_intercept.in_canopy_sky,
-  point_intercept.dead,
-  point_intercept.growth_form,
-  point_intercept.height
-FROM
-  public.site_location,
-  public.site_location_visit,
-  public.point_intercept LEFT OUTER JOIN public.herbarium_determination
-  ON public.herbarium_determination.veg_barcode = public.point_intercept.veg_barcode
-WHERE
-  site_location_visit.site_location_id = site_location.site_location_id AND
-  point_intercept.site_location_visit_id = site_location_visit.site_location_visit_id;
+  sl.site_location_name,
+  pi.site_location_visit_id,
+  pi.transect,
+  pi.point_number,
+  hd.veg_barcode,
+  hd.herbarium_determination,
+  pi.substrate,
+  pi.in_canopy_sky,
+  pi.dead,
+  pi.growth_form,
+  pi.height
+FROM public.site_location AS sl
+INNER JOIN public.site_location_visit AS slv
+  ON slv.site_location_id = sl.site_location_id
+INNER JOIN public.point_intercept AS pi
+  ON pi.site_location_visit_id = slv.site_location_visit_id
+LEFT OUTER JOIN public.herbarium_determination AS hd
+  ON hd.veg_barcode = pi.veg_barcode;
 
 CREATE OR REPLACE VIEW api.veg_basal AS
 SELECT
-  site_location.site_location_name,
-  basal_area.site_location_visit_id,
-  site_location_visit.site_location_id,
-  basal_area.point_id,
-  herbarium_determination.herbarium_determination,
-  herbarium_determination.veg_barcode,
-  basal_area.hits,
-  basal_area.basal_area_factor,
-  basal_area.basal_area
-FROM
-  public.site_location,
-  public.site_location_visit,
-  public.herbarium_determination,
-  public.basal_area
-WHERE
-  site_location_visit.site_location_id = site_location.site_location_id AND
-  herbarium_determination.veg_barcode = basal_area.veg_barcode AND
-  basal_area.site_location_visit_id = site_location_visit.site_location_visit_id;
+  sl.site_location_name,
+  ba.site_location_visit_id,
+  slv.site_location_id,
+  ba.point_id,
+  hd.herbarium_determination,
+  hd.veg_barcode,
+  ba.hits,
+  ba.basal_area_factor,
+  ba.basal_area
+FROM public.site_location AS sl
+INNER JOIN public.site_location_visit AS slv
+  ON slv.site_location_id = sl.site_location_id
+INNER JOIN public.basal_area AS ba
+  ON ba.site_location_visit_id = slv.site_location_visit_id
+INNER JOIN public.herbarium_determination AS hd
+  ON hd.veg_barcode = ba.veg_barcode;
 
 GRANT SELECT ON api.site TO web_anon;
 GRANT SELECT ON api.structural_summary TO web_anon;
