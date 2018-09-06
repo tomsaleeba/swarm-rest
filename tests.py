@@ -44,7 +44,7 @@ class TestUM(unittest.TestCase):
         self.assertTrue(item['subsite_id'])
 
     def test_veg_voucher_01(self):
-        item = get_single_element_json('veg_voucher', 12, self)
+        item = get_single_element_json('veg_voucher', 11, self)
         self.assertTrue(item['veg_barcode'])
 
     def test_veg_pi_01(self):

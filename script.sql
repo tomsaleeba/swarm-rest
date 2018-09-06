@@ -161,7 +161,6 @@ SELECT
   hd.is_uncertain_determination,
   slv.visit_start_date,
   vv.site_location_visit_id,
-  vv.field_name,
   gv.primary_gen_barcode,
   gv.secondary_gen_barcode_1,
   gv.secondary_gen_barcode_2,
