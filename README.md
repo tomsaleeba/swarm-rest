@@ -31,4 +31,19 @@ To start the stack:
       curl -v <hostname>:3000/site?limit=1
       # the response should be a JSON array of objects, e.g. [{"site_location_name":"...
       ```
+## Running health check tests
 
+There are some brief health check tests you can run against a live service to make sure it's returning what you expect. First, make sure you satisfy the requirements:
+
+  1. python 2.7
+  1. python `requests`
+
+You can run it with:
+```bash
+./tests.py <base URL>
+```
+
+For example, you could pass a URL like
+```bash
+./tests.py http://swarmapi.ausplots.aekos.org.au:3000
+```
