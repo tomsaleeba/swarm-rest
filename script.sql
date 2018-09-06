@@ -162,7 +162,11 @@ SELECT
   slv.visit_start_date,
   vv.site_location_visit_id,
   vv.field_name,
-  gv.primary_gen_barcode
+  gv.primary_gen_barcode,
+  gv.secondary_gen_barcode_1,
+  gv.secondary_gen_barcode_2,
+  gv.secondary_gen_barcode_3,
+  gv.secondary_gen_barcode_4
 FROM public.site_location AS sl
 INNER JOIN public.site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
