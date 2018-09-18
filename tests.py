@@ -49,7 +49,7 @@ class TestUM(unittest.TestCase):
 
     def test_veg_pi_01(self):
         item = get_single_element_json('veg_pi', 11, self)
-        self.assertTrue(item['point_number'])
+        self.assertIsNotNone(item['point_number'])
 
     def test_veg_basal_01(self):
         item = get_single_element_json('veg_basal', 9, self)
