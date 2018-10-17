@@ -4,7 +4,8 @@ CREATE ROLE web_anon nologin;
 GRANT web_anon TO postgres; -- assumes current user is 'postgres'
 GRANT USAGE ON SCHEMA api TO web_anon;
 
-CREATE OR REPLACE VIEW api.site AS
+DROP VIEW IF EXISTS api.site;
+CREATE VIEW api.site AS
 SELECT
   sl.site_location_name,
   sl.established_date,
@@ -18,6 +19,7 @@ SELECT
   sl.outcrop_lithology,
   sl.other_outcrop_lithology,
   sl.plot_dimensions,
+  slv.site_location_visit_id,
   slv.visit_start_date,
   slv.visit_end_date,
   slv.visit_notes,
@@ -53,7 +55,8 @@ INNER JOIN public.site_location_point AS slp
   ON slp.point = 'SW' -- need to pick a single point to get coordinates
   AND slp.site_location_id = sl.site_location_id;
 
-CREATE OR REPLACE VIEW api.structural_summary AS
+DROP VIEW IF EXISTS api.structural_summary;
+CREATE VIEW api.structural_summary AS
 SELECT
   sl.site_location_name,
   ss.phenology_comment,
@@ -74,7 +77,8 @@ INNER JOIN public.site_location_visit AS slv
 INNER JOIN public.structural_summary AS ss
   ON ss.site_location_visit_id = slv.site_location_visit_id;
 
-CREATE OR REPLACE VIEW api.soil_bulk_density AS
+DROP VIEW IF EXISTS api.soil_bulk_density;
+CREATE VIEW api.soil_bulk_density AS
 SELECT
   sl.site_location_name,
   sbd.sample_id,
@@ -95,7 +99,8 @@ INNER JOIN public.site_location_visit AS slv
 INNER JOIN public.soil_bulk_density as sbd
   ON sbd.site_location_visit_id = slv.site_location_visit_id;
 
-CREATE OR REPLACE VIEW api.soil_characterisation AS
+DROP VIEW IF EXISTS api.soil_characterisation;
+CREATE VIEW api.soil_characterisation AS
 SELECT
   sl.site_location_name,
   sc.upper_depth,
@@ -135,7 +140,8 @@ INNER JOIN public.site_location_visit AS slv
 INNER JOIN public.soil_characterisation AS sc
   ON sc.site_location_visit_id = slv.site_location_visit_id;
 
-CREATE OR REPLACE VIEW api.soil_subsite AS
+DROP VIEW IF EXISTS api.soil_subsite;
+CREATE VIEW api.soil_subsite AS
 SELECT
   sl.site_location_name,
   sso.subsite_id,
@@ -153,14 +159,15 @@ INNER JOIN public.site_location_visit AS slv
 INNER JOIN public.soil_subsite_observations AS sso
   ON sso.site_location_visit_id = slv.site_location_visit_id;
 
-CREATE OR REPLACE VIEW api.veg_voucher AS
+DROP VIEW IF EXISTS api.veg_voucher;
+CREATE VIEW api.veg_voucher AS
 SELECT
   sl.site_location_name,
   vv.veg_barcode,
   hd.herbarium_determination,
   hd.is_uncertain_determination,
   slv.visit_start_date,
-  vv.site_location_visit_id,
+  slv.site_location_visit_id,
   gv.primary_gen_barcode,
   gv.secondary_gen_barcode_1,
   gv.secondary_gen_barcode_2,
@@ -176,10 +183,11 @@ LEFT OUTER JOIN public.herbarium_determination AS hd
 LEFT OUTER JOIN public.genetic_vouchers AS gv
   ON gv.veg_barcode = vv.veg_barcode;
 
-CREATE OR REPLACE VIEW api.veg_pi AS
+DROP VIEW IF EXISTS api.veg_pi;
+CREATE VIEW api.veg_pi AS
 SELECT
   sl.site_location_name,
-  pi.site_location_visit_id,
+  slv.site_location_visit_id,
   pi.transect,
   pi.point_number,
   hd.veg_barcode,
@@ -197,11 +205,12 @@ INNER JOIN public.point_intercept AS pi
 LEFT OUTER JOIN public.herbarium_determination AS hd
   ON hd.veg_barcode = pi.veg_barcode;
 
-CREATE OR REPLACE VIEW api.veg_basal AS
+DROP VIEW IF EXISTS api.veg_basal;
+CREATE VIEW api.veg_basal AS
 SELECT
   sl.site_location_name,
-  ba.site_location_visit_id,
-  slv.site_location_id,
+  slv.site_location_visit_id,
+  sl.site_location_id,
   ba.point_id,
   hd.herbarium_determination,
   hd.veg_barcode,

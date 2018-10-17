@@ -24,7 +24,7 @@ class TestUM(unittest.TestCase):
         self.assertEqual(body['swagger'], '2.0')
 
     def test_site_01(self):
-        item = get_single_element_json('site', 40, self)
+        item = get_single_element_json('site', 41, self)
         self.assertTrue(item['established_date'])
 
     def test_structural_summary_01(self):
