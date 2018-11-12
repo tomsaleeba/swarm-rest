@@ -19,18 +19,41 @@ Make sure you meet the requirements:
 
 To start the stack:
 
-  1. clone the repo
+  1. clone this repo and `cd` into the workspace
+  1. [allow more virtual memory](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html#vm-max-map-count) on the host (ES needs this)
+      ```bash
+      sysctl -w vm.max_map_count=262144
+      ```
+  1. copy the runner script
+      ```bash
+      cp start.sh.example start.sh
+      chmod +x start.sh
+      ```
+  1. edit the runner script `start.sh` to define the needed environmental variables
+      ```bash
+      vim start.sh
+      ```
   1. start the stack
       ```bash
-      docker-compose -d up
+      ./start.sh
+      # or if you need to force a rebuild of curl-cron
+      ./start.sh --build
       ```
-  1. restore the DB dump to the `app_db` database
+  1. restore the DB dump (any format pg_restore supports) to the `app_db` database
+      ```bash
+      cat swarm.dump | docker exec -i swarm-rest_db_1 sh -c 'pg_restore --no-owner -U app_user -d app_db -v'
+      ```
   1. connect as a superuser and run the `./script.sql` file to create all required objects for the API to run
-  1. test the service
+      ```bash
+      cat script.sql | docker exec -i swarm-rest_db_1 sh -c 'psql -U app_user -d app_db'
+      ```
+  1. use the service
       ```bash
       curl -v <hostname>:3000/site?limit=1
       # the response should be a JSON array of objects, e.g. [{"site_location_name":"...
       ```
+  1. check the Kibana dashboard for metrics at http://<hostname>:5601 (port can be changed in `.env`)
+
 ## Running health check tests
 
 There are some brief health check tests you can run against a live service to make sure it's returning what you expect. First, make sure you satisfy the requirements:
@@ -47,3 +70,24 @@ For example, you could pass a URL like
 ```bash
 ./tests.py http://swarmapi.ausplots.aekos.org.au:3000
 ```
+
+## Stopping the stack
+The stack is design to always keep running, even after a server restart, until you manually stop it. The data for postgres and ElasticSearch are stored in Docker data volumes. This means you can stop and destroy the stack, but **keep the data** with:
+```bash
+docker-compose down
+```
+
+If you want to completely clean up and have the data volumes also removed, you can do this with:
+```bash
+docker-compose down --volumes
+```
+
+## Connect to DB with psql
+You can connect to the DB if you SSH to the docker host, then run:
+```bash
+docker exec -it swarm-rest_db_1 sh -c 'psql -U app_user -d app_db'
+```
+
+## Known problems
+  1. Sometimes Kibana times out (exhausts the 30 seconds of waiting to start) when starting. I don't know why but the container will keep restarting until it finally comes up. Just wait I guess.
+

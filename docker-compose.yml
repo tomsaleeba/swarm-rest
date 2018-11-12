@@ -1,27 +1,73 @@
 version: '3'
 services:
   server:
-    image: postgrest/postgrest
-    ports:
-      - "3000:3000"
+    image: postgrest/postgrest:v5.1.0
     links:
       - db:db
     environment:
-      PGRST_DB_URI: postgres://app_user:password@db:5432/app_db
+      PGRST_DB_URI: postgres://app_user:${DB_PASSWORD}@db:5432/app_db
       PGRST_DB_SCHEMA: api
       PGRST_DB_ANON_ROLE: web_anon
     restart: unless-stopped
     depends_on:
       - db
+  statsFacade:
+    image: tomsaleeba/swarm-facade:1.0.0
+    ports:
+      - "${LISTEN_PORT}:3000"
+    links:
+      - server:server
+      - elk:elk
+    environment:
+      TARGET_URL: http://server:3000
+      LISTEN_PORT: 3000
+      ES_URL: elk:${ES_PORT}
+      INDEX_NAME: ${ES_INDEX_NAME}
+    restart: unless-stopped
+    depends_on:
+      - server
+      - elk
   db:
-    image: postgres
+    image: postgres:10
     ports:
       - "5432:5432"
     environment:
       POSTGRES_DB: app_db
       POSTGRES_USER: app_user
-      POSTGRES_PASSWORD: password
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
     restart: unless-stopped
     volumes:
-      - "./pgdata:/var/lib/postgresql/data"
+      - "swarm-pgdata:/var/lib/postgresql/data"
+  elk:
+    image: sebp/elk:642
+    ports:
+      - "${KIBANA_PORT}:5601"
+      - "${ES_PORT}:9200"
+    environment:
+      - LOGSTASH_START=0 # we don't need LogStash
+      - AWS_ACCESS_KEY # override in shell at deploy time
+      - AWS_SECRET # override in shell at deploy time
+      - AWS_BUCKET=${S3_BUCKET}
+      - ES_SNAPSHOT_REPO
+    restart: unless-stopped
+    volumes:
+      - "elk-data:/var/lib/elasticsearch"
+      - "./elk-pre-hook.sh:/usr/local/bin/elk-pre-hooks.sh"
+      - "./elk-post-hook.sh:/usr/local/bin/elk-post-hooks.sh"
+  croncurl:
+    build: ./curl-cron
+    links:
+      - elk:elk
+    environment:
+      ES_HOST: elk
+      ES_PORT: ${ES_PORT}
+      ES_SNAPSHOT_REPO: ${ES_SNAPSHOT_REPO}
+      BACKUP_PREFIX: swarm-metrics
+      CRON_SCHEDULE: '3 9 * * *'
+    restart: unless-stopped
+    depends_on:
+      - elk
+volumes:
+  elk-data:
+  swarm-pgdata:
 
