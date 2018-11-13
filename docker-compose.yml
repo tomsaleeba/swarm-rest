@@ -14,14 +14,15 @@ services:
   statsFacade:
     image: tomsaleeba/swarm-facade:1.0.0
     ports:
-      - "${LISTEN_PORT}:3000"
+      - "${EXTERNAL_LISTEN_PORT}:80"
+      - "3000:80" # deprecated, remove once all users of ausplotsR have upgraded
     links:
       - server:server
       - elk:elk
     environment:
       TARGET_URL: http://server:3000
-      LISTEN_PORT: 3000
-      ES_URL: elk:${ES_PORT}
+      LISTEN_PORT: 80
+      ES_URL: http://elk:${ES_PORT}
       INDEX_NAME: ${ES_INDEX_NAME}
     restart: unless-stopped
     depends_on:
