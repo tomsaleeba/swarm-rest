@@ -16,6 +16,7 @@ Make sure you meet the requirements:
   1. docker >= 18.06
   1. docker-compose >= 1.22.0
   1. a recent PG dump of the SWARM DB
+  1. AWS credentials for IAM user to store ElasticSearch snapshots (use `./create-aws-s3-user-and-bucket.sh` script to create)
 
 To start the stack:
 
