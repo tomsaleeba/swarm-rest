@@ -42,11 +42,11 @@ To start the stack:
       ```
   1. restore the DB dump (any format pg_restore supports) to the `app_db` database
       ```bash
-      cat swarm.dump | docker exec -i swarm-rest_db_1 sh -c 'pg_restore --no-owner -U app_user -d app_db -v'
+      cat swarm.dump | docker exec -i swarm-rest_db_1 sh -c 'pg_restore --no-owner -U postgres -d swarm -v'
       ```
   1. connect as a superuser and run the `./script.sql` file to create all required objects for the API to run
       ```bash
-      cat script.sql | docker exec -i swarm-rest_db_1 sh -c 'psql -U app_user -d app_db'
+      cat script.sql | docker exec -i swarm-rest_db_1 sh -c 'psql -U postgres -d swarm'
       ```
   1. use the service
       ```bash
