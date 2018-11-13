@@ -27,18 +27,18 @@ To start the stack:
       ```
   1. copy the runner script
       ```bash
-      cp start.sh.example start.sh
-      chmod +x start.sh
+      cp start-or-restart.sh.example start-or-restart.sh
+      chmod +x start-or-restart.sh
       ```
-  1. edit the runner script `start.sh` to define the needed environmental variables
+  1. edit the runner script `start-or-restart.sh` to define the needed environmental variables
       ```bash
-      vim start.sh
+      vim start-or-restart.sh
       ```
   1. start the stack
       ```bash
-      ./start.sh
-      # or if you need to force a rebuild of curl-cron
-      ./start.sh --build
+      ./start-or-restart.sh
+      # or if you need to force a rebuild of the 'curl-cron' image
+      ./start-or-restart.sh --build
       ```
   1. restore the DB dump (any format pg_restore supports) to the `app_db` database
       ```bash
