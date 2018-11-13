@@ -23,7 +23,8 @@ To start the stack:
   1. clone this repo and `cd` into the workspace
   1. [allow more virtual memory](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html#vm-max-map-count) on the host (ES needs this)
       ```bash
-      echo vm.max_map_count=262144 | sudo tee -a /etc/sysctl.conf # only run this one for a host
+      echo vm.max_map_count=262144 | sudo tee -a /etc/sysctl.conf # only run this once for a host
+      sudo sysctl -p # read the new config
       ```
   1. copy the runner script
       ```bash
