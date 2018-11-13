@@ -50,6 +50,7 @@ services:
       - AWS_SECRET # override in shell at deploy time
       - AWS_BUCKET=${S3_BUCKET}
       - ES_SNAPSHOT_REPO
+      - KIBANA_CONNECT_RETRY=60 # the default 30 seconds doesn't seem long enough
     restart: unless-stopped
     volumes:
       - "elk-data:/var/lib/elasticsearch"

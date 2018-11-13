@@ -23,7 +23,7 @@ To start the stack:
   1. clone this repo and `cd` into the workspace
   1. [allow more virtual memory](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html#vm-max-map-count) on the host (ES needs this)
       ```bash
-      sysctl -w vm.max_map_count=262144
+      echo vm.max_map_count=262144 | sudo tee -a /etc/sysctl.conf # only run this one for a host
       ```
   1. copy the runner script
       ```bash
@@ -50,7 +50,7 @@ To start the stack:
       ```
   1. use the service
       ```bash
-      curl -v <hostname>:3000/site?limit=1
+      curl -v <hostname>/site?limit=1
       # the response should be a JSON array of objects, e.g. [{"site_location_name":"...
       ```
   1. check the Kibana dashboard for metrics at http://<hostname>:5601 (port can be changed in `.env`)
@@ -69,7 +69,7 @@ You can run it with:
 
 For example, you could pass a URL like
 ```bash
-./tests.py http://swarmapi.ausplots.aekos.org.au:3000
+./tests.py http://swarmapi.ausplots.aekos.org.au
 ```
 
 ## Stopping the stack
@@ -78,7 +78,7 @@ The stack is design to always keep running, even after a server restart, until y
 docker-compose down
 ```
 
-If you want to completely clean up and have the data volumes also removed, you can do this with:
+If you want to completely clean up and have the **data volumes also removed**, you can do this with:
 ```bash
 docker-compose down --volumes
 ```
@@ -86,9 +86,9 @@ docker-compose down --volumes
 ## Connect to DB with psql
 You can connect to the DB if you SSH to the docker host, then run:
 ```bash
-docker exec -it swarm-rest_db_1 sh -c 'psql -U app_user -d app_db'
+docker exec -it swarm-rest_db_1 sh -c 'psql -U postgres -d swarm'
 ```
 
 ## Known problems
-  1. Sometimes Kibana times out (exhausts the 30 seconds of waiting to start) when starting. I don't know why but the container will keep restarting until it finally comes up. Just wait I guess.
+  1. none :D
 
