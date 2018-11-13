@@ -12,7 +12,7 @@ services:
     depends_on:
       - db
   statsFacade:
-    image: tomsaleeba/swarm-facade:1.0.0
+    image: tomsaleeba/swarm-rest-metrics-facade:1.0.0
     ports:
       - "${EXTERNAL_LISTEN_PORT}:80"
       - "3000:80" # deprecated, remove once all users of ausplotsR have upgraded
