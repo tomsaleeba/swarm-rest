@@ -69,6 +69,25 @@ services:
     restart: unless-stopped
     depends_on:
       - elk
+  db-sync:
+    build: ./db-sync
+    links:
+      - db:db
+    environment:
+      FROM_USER: ${SWARM_PROD_USER}
+      FROM_PASS: ${SWARM_PROD_PASS}
+      FROM_HOST: ${SWARM_PROD_HOST}
+      FROM_PORT: ${SWARM_PROD_PORT}
+      FROM_DB: ${SWARM_PROD_DB}
+      TO_USER: ${DB_USER}
+      TO_PASS: ${DB_PASSWORD}
+      TO_HOST: db
+      TO_PORT: 5432
+      TO_DB: ${DB_NAME}
+      CRON_SCHEDULE: '1 1 * * *'
+    restart: unless-stopped
+    depends_on:
+      - db
 volumes:
   elk-data:
   swarm-pgdata:
