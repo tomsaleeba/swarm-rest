@@ -64,8 +64,8 @@ services:
       ES_HOST: elk
       ES_PORT: ${ES_PORT}
       ES_SNAPSHOT_REPO: ${ES_SNAPSHOT_REPO}
-      BACKUP_PREFIX: swarm-metrics
-      CRON_SCHEDULE: '3 9 * * *'
+      BACKUP_PREFIX: ${ES_SNAPSHOT_PREFIX}
+      CRON_SCHEDULE: ${ES_SNAPSHOT_CRON_SCHEDULE}
     restart: unless-stopped
     depends_on:
       - elk
@@ -84,7 +84,7 @@ services:
       TO_HOST: db
       TO_PORT: 5432
       TO_DB: ${DB_NAME}
-      CRON_SCHEDULE: '1 1 * * *'
+      CRON_SCHEDULE: ${DB_SYNC_CRON_SCHEDULE}
     restart: unless-stopped
     depends_on:
       - db

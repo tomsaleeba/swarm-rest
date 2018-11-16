@@ -56,18 +56,19 @@ To start the stack:
       2018-11-15 02:19:24.964 UTC [70] LOG:  database system was shut down at 2018-11-15 02:19:24 UTC
       2018-11-15 02:19:24.976 UTC [1] LOG:  database system is ready to accept connections
       ```
-  1. trigger a schema-only sync
+  1. trigger a schema-only sync (should take less than a minute)
       ```bash
       docker exec -i swarmrest_db-sync_1 sh -c 'SCHEMA_ONLY=1 sh /run.sh'
       ```
-  1. trigger a data sync to get us up and running
+  1. trigger a data sync to get us up and running (should take around a minute)
       ```bash
       docker exec -i swarmrest_db-sync_1 sh -c 'sh /run.sh'
       ```
   1. connect as a superuser and run the `./script.sql` file to create all required objects for the API to run
       ```bash
-      cat script.sql | docker exec -i swarm-rest_db_1 sh -c 'psql -U postgres -d swarm'
+      cat script.sql | docker exec -i swarmrest_db_1 sh -c 'psql -U postgres -d swarm'
       ```
+  1. if you're re-creating a prod instance, check the section below about restoring ES snapshots
   1. use the service
       ```bash
       curl -v <hostname>/site?limit=1
@@ -111,6 +112,55 @@ CREATE ROLE syncuser PASSWORD 'somegoodpassword';
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO syncuser;
 GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO syncuser;
 ```
+
+## Restoring ElasticSearch snapshots
+
+The name of the snapshot repo is defined in the `.env` file as `ES_SNAPSHOT_REPO`. For this example, let's assume that it's `swarm-s3-backup`. Also, as we don't expose the ES instance to the public internet, you'll need to run these command on the docker host to have access (or through an SSH tunnel if you're fancy).
+
+  1. let's list all the available snapshots
+      ```console
+      $ curl 'http://localhost:9200/_snapshot/swarm-s3-backup/_all'
+      [
+        {
+          "snapshot": "swarm-metrics.20181115_0903",
+          "uuid": "XoHfmTbaROqgKlI0jvEWjw",
+          "indices": [
+            "swarm-rest",
+            ".kibana"
+          ],
+          "state": "SUCCESS",
+          "start_time": "2018-11-15T09:03:00.836Z",
+          ...
+        },
+        ...
+      ]
+      ```
+  1. pick a snapshot to restore, and let's restore it
+      ```console
+      $ curl -X POST 'http://localhost:9200/_snapshot/swarm-s3-backup/swarm-metrics.20181115_0903/_restore?wait_for_completion'
+      {
+        "snapshot": {
+          "snapshot": "swarm-metrics.20181115_0903",
+          "indices": [
+            ".kibana",
+            "swarm-rest"
+          ],
+          "shards": {
+            "total": 6,
+            "failed": 0,
+            "successful": 6
+          }
+        }
+      }
+      ```
+  1. if you get an error that indicies are already open, you can remove the ES container and its volume, then create a fresh one to start from a clean slate:
+      ```bash
+      docker rm -f swarmrest_elk_1
+      docker volume rm swarmrest_elk-data
+      docker logs --tail 10 -f swarmrest_elk_1 # watch the logs until Kibana has started up
+      ./start-or-restart.sh
+      # then try the restore again
+      ```
 
 ## Connect to DB with psql
 You can connect to the DB if you SSH to the docker host, then run:
