@@ -6,7 +6,7 @@ GRANT USAGE ON SCHEMA api TO web_anon;
 
 DROP VIEW IF EXISTS api.site;
 CREATE VIEW api.site AS
-SELECT
+SELECT DISTINCT
   sl.site_location_name,
   sl.established_date,
   sl.description,
