@@ -11,11 +11,8 @@ services:
     restart: unless-stopped
     depends_on:
       - db
-  statsFacade:
+  stats_facade:
     image: tomsaleeba/swarm-rest-metrics-facade:2.0.2
-    ports:
-      - "${EXTERNAL_LISTEN_PORT}:80"
-      - "3000:80" # deprecated, remove once all users of ausplotsR have upgraded
     links:
       - server:server
       - elk:elk
@@ -27,6 +24,17 @@ services:
     depends_on:
       - server
       - elk
+  filter_proxy:
+    build: ./filter-proxy
+    links:
+      - stats_facade:stats_facade
+    ports:
+      - "${EXTERNAL_LISTEN_PORT}:80"
+      - "3000:80" # deprecated, remove once all users of ausplotsR have upgraded
+    environment:
+      TARGET_SERVER: 'stats_facade:80'
+    depends_on:
+      - stats_facade
   db:
     image: postgres:10
     ports:

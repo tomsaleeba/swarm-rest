@@ -1,0 +1,12 @@
+version: '3'
+services:
+  theserver:
+    image: jasonrm/dummy-server
+  ng:
+    build: .
+    links:
+      - theserver:theserver
+    ports:
+      - 8081:80
+    environment:
+      TARGET_SERVER: 'theserver:8080'
