@@ -15,6 +15,8 @@ http {
         server $TARGET_SERVER;
     }
 
+    limit_req_zone \$binary_remote_addr zone=mylimit:10m rate=5r/s;
+
     server {
         listen 80;
 
@@ -23,6 +25,7 @@ http {
         }
 
         location / {
+            limit_req zone=mylimit burst=20 nodelay;
             proxy_pass         http://target-server;
             proxy_redirect     off;
             proxy_set_header   Host \$host;

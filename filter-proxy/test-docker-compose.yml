@@ -7,6 +7,6 @@ services:
     links:
       - theserver:theserver
     ports:
-      - 8081:80
+      - 30000:80
     environment:
       TARGET_SERVER: 'theserver:8080'
