@@ -1,5 +1,6 @@
 #!/bin/sh
 : ${TARGET_SERVER:?}
+: ${DNS_NAME:?}
 confpath=/etc/nginx/nginx.conf
 cat << EOF > $confpath
 
@@ -17,8 +18,17 @@ http {
 
     limit_req_zone \$binary_remote_addr zone=mylimit:10m rate=5r/s;
 
+    # default server to catch unmatching requests, and reject them!
     server {
         listen 80;
+        return 404;
+    }
+
+    server {
+        listen 80;
+        server_name $DNS_NAME
+                    localhost
+                    ;
 
         location ~ \.php {
             deny all;

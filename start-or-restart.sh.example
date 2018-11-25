@@ -10,6 +10,7 @@ export SWARM_PROD_PASS=pass # TODO change me
 export SWARM_PROD_HOST=some.host # TODO change me
 export SWARM_PROD_PORT=5432
 export SWARM_PROD_DB=somedb # TODO change me
+export PUBLIC_DNS_NAME=swarmapi.ausplots.aekos.org.au
 # if you run this in a non-prod environment, you can (should!) disable ES snapshots with:
 #export ES_SNAPSHOT_CRON_SCHEDULE='0 0 31 2 *' # feb 31, i.e. never, thanks https://stackoverflow.com/a/13938099/1410035
 

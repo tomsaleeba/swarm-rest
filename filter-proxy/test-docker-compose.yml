@@ -10,3 +10,4 @@ services:
       - 30000:80
     environment:
       TARGET_SERVER: 'theserver:8080'
+      DNS_NAME: swarmapi.ausplots.aekos.org.au
