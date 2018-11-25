@@ -170,4 +170,6 @@ docker exec -it swarmrest_db_1 sh -c 'psql -U postgres -d swarm'
 
 ## Known problems
   1. Kibana has no auth so we can't open it to the public yet
+  1. sometimes ES dies inside the ELK stack but Docker can't see it. Either add a health check or go for the official, separate images for Kibana and ES so they're PID 1 and can be monitored (and bounced if they die)
+  1. consider adding fail2ban to the stack to help nginx provide protection. Maybe something like https://github.com/crazy-max/docker-fail2ban but that writes error.log to stderr so that needs to be piped into file too so f2b can read it.
 
