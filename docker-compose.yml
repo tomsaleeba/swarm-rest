@@ -33,6 +33,7 @@ services:
       - "3000:80" # deprecated, remove once all users of ausplotsR have upgraded
     environment:
       TARGET_SERVER: 'stats_facade:80'
+    restart: unless-stopped
     depends_on:
       - stats_facade
   db:
