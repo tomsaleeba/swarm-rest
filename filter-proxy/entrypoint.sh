@@ -18,6 +18,10 @@ http {
     server {
         listen 80;
 
+        location ~ \.php {
+            deny all;
+        }
+
         location / {
             proxy_pass         http://target-server;
             proxy_redirect     off;
