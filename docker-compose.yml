@@ -12,7 +12,7 @@ services:
     depends_on:
       - db
   stats_facade:
-    image: tomsaleeba/swarm-rest-metrics-facade:2.0.2
+    image: tomsaleeba/swarm-rest-metrics-facade:2.1.0
     links:
       - server:server
       - elk:elk
@@ -25,7 +25,7 @@ services:
       - server
       - elk
   filter_proxy:
-    build: ./filter-proxy
+    image: tomsaleeba/nginx-filter-proxy:1.1.0
     links:
       - stats_facade:stats_facade
     ports:
