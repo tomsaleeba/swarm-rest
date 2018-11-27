@@ -85,12 +85,12 @@ There are some brief health check tests you can run against a live service to ma
 
 You can run it with:
 ```bash
-./tests.py <base URL>
+./tests/tests.py <base URL>
 ```
 
 For example, you could pass a URL like
 ```bash
-./tests.py http://swarmapi.ausplots.aekos.org.au
+./tests/tests.py http://swarmapi.ausplots.aekos.org.au
 ```
 
 ## Stopping the stack
