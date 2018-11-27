@@ -1,4 +1,4 @@
-version: '3'
+version: '3.4'
 services:
   server:
     image: postgrest/postgrest:v5.1.0
@@ -49,7 +49,6 @@ services:
     volumes:
       - "swarm-pgdata:/var/lib/postgresql/data"
   elk:
-    # TODO change to separate ES and Kibana containers, get plugin into ES image
     image: sebp/elk:642
     ports:
       - "${KIBANA_PORT}:5601"
@@ -62,10 +61,23 @@ services:
       - ES_SNAPSHOT_REPO
       - KIBANA_CONNECT_RETRY=60 # the default 30 seconds doesn't seem long enough
     restart: unless-stopped
+    healthcheck:
+      test: curl -f localhost:9200/_cluster/health || exit 1
+      interval: 1m30s
+      timeout: 10s
+      retries: 1
+      start_period: 99s
     volumes:
       - "elk-data:/var/lib/elasticsearch"
       - "./elk-pre-hook.sh:/usr/local/bin/elk-pre-hooks.sh"
       - "./elk-post-hook.sh:/usr/local/bin/elk-post-hooks.sh"
+  autoheal: # thanks https://stackoverflow.com/a/48538213/1410035
+    restart: always
+    image: willfarrell/autoheal
+    environment:
+      - AUTOHEAL_CONTAINER_LABEL=all
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
   croncurl:
     build: ./curl-cron
     links:
