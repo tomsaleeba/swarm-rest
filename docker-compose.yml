@@ -78,8 +78,8 @@ services:
       - AUTOHEAL_CONTAINER_LABEL=all
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
-  croncurl:
-    build: ./curl-cron
+  es_snapshot:
+    build: ./es-snapshot
     links:
       - elk:elk
     environment:
@@ -91,7 +91,7 @@ services:
     restart: unless-stopped
     depends_on:
       - elk
-  db-sync:
+  db_sync:
     build: ./db-sync
     links:
       - db:db
