@@ -1,0 +1,10 @@
+HOST=swarmapi.ausplots.aekos.org.au
+#HOST=localhost:33333
+http://${HOST}/site
+http://${HOST}/soil_bulk_density
+http://${HOST}/soil_characterisation
+http://${HOST}/soil_subsite
+http://${HOST}/structural_summary
+http://${HOST}/veg_basal
+http://${HOST}/veg_pi
+http://${HOST}/veg_voucher
