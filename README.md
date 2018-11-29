@@ -94,7 +94,7 @@ For example, you could pass a URL like
 ```
 
 ## Stopping the stack
-The stack is design to always keep running, even after a server restart, until you manually stop it. The data for postgres and ElasticSearch are stored in Docker data volumes. This means you can stop and destroy the stack, but **keep the data** with:
+The stack is designed to always keep running, even after a server restart, until you manually stop it. The data for postgres and ElasticSearch are stored in Docker data volumes. This means you can stop and destroy the stack, but **keep the data** with:
 ```bash
 docker-compose down
 ```
