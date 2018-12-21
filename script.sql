@@ -4,6 +4,11 @@ CREATE ROLE web_anon nologin;
 GRANT web_anon TO postgres; -- assumes current user is 'postgres'
 GRANT USAGE ON SCHEMA api TO web_anon;
 
+CREATE VIEW public.published_site_location_visit AS
+SELECT *
+FROM public.site_location_visit
+WHERE ok_to_publish = true;
+
 DROP VIEW IF EXISTS api.site;
 CREATE VIEW api.site AS
 SELECT
@@ -49,7 +54,7 @@ SELECT
   slp.longitude,
   slp.point
 FROM public.site_location AS sl
-INNER JOIN public.site_location_visit AS slv
+INNER JOIN public.published_site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
 INNER JOIN public.site_location_point AS slp
   ON slp.point = 'SW' -- need to pick a single point to get coordinates
@@ -72,7 +77,7 @@ SELECT
   ss.description,
   ss.mass_flowering_event
 FROM public.site_location AS sl
-INNER JOIN public.site_location_visit AS slv
+INNER JOIN public.published_site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
 INNER JOIN public.structural_summary AS ss
   ON ss.site_location_visit_id = slv.site_location_visit_id;
@@ -94,7 +99,7 @@ SELECT
   sbd.fine_earth_bulk_density,
   sbd.gravel_bulk_density
 FROM public.site_location AS sl
-INNER JOIN public.site_location_visit AS slv
+INNER JOIN public.published_site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
 INNER JOIN public.soil_bulk_density as sbd
   ON sbd.site_location_visit_id = slv.site_location_visit_id;
@@ -135,7 +140,7 @@ SELECT
   sc.next_size_1,
   sc.layer_barcode
 FROM public.site_location AS sl
-INNER JOIN public.site_location_visit AS slv
+INNER JOIN public.published_site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
 INNER JOIN public.soil_characterisation AS sc
   ON sc.site_location_visit_id = slv.site_location_visit_id;
@@ -154,7 +159,7 @@ SELECT
   sso.comments,
   sso.metagenomic_barcode
 FROM public.site_location AS sl
-INNER JOIN public.site_location_visit AS slv
+INNER JOIN public.published_site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
 INNER JOIN public.soil_subsite_observations AS sso
   ON sso.site_location_visit_id = slv.site_location_visit_id;
@@ -174,7 +179,7 @@ SELECT
   gv.secondary_gen_barcode_3,
   gv.secondary_gen_barcode_4
 FROM public.site_location AS sl
-INNER JOIN public.site_location_visit AS slv
+INNER JOIN public.published_site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
 INNER JOIN public.veg_vouchers AS vv
   ON vv.site_location_visit_id = slv.site_location_visit_id
@@ -198,7 +203,7 @@ SELECT
   pi.growth_form,
   pi.height
 FROM public.site_location AS sl
-INNER JOIN public.site_location_visit AS slv
+INNER JOIN public.published_site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
 INNER JOIN public.point_intercept AS pi
   ON pi.site_location_visit_id = slv.site_location_visit_id
@@ -218,7 +223,7 @@ SELECT
   ba.basal_area_factor,
   ba.basal_area
 FROM public.site_location AS sl
-INNER JOIN public.site_location_visit AS slv
+INNER JOIN public.published_site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
 INNER JOIN public.basal_area AS ba
   ON ba.site_location_visit_id = slv.site_location_visit_id

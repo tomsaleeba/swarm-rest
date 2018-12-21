@@ -76,6 +76,8 @@ To start the stack:
       ```
   1. check the Kibana dashboard for metrics at http://<hostname>:5601 (port can be changed in `.env`)
 
+Warning: the Kibana (ELK stack) instance has no security/auth so don't expose it to the internet. Or if you do, add some security. A nice way to connect to the Kibana dashboard on a VM without opening the firewall is to use SSH local port forwarding (https://help.ubuntu.com/community/SSH/OpenSSH/PortForwarding#Local_Port_Forwarding).
+
 ## Running health check tests
 
 There are some brief health check tests you can run against a live service to make sure it's returning what you expect. First, make sure you satisfy the requirements:
