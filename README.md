@@ -13,6 +13,8 @@ We collect usage metrics on the service by intercepting all traffic to the API a
 
 As this is just a mirror of production, we have a container to periodically synchronise the data in SWARM production into our DB.
 
+We also have a read-only user auto-created so the DB can be used as a safe way to share a fresh-ish mirror of production.
+
 ## Running the stack
 
 Make sure you meet the requirements:
@@ -47,7 +49,7 @@ To start the stack:
       ```
   1. wait until the `db` container is up and running (shouldn't take long):
       ```console
-      $ docker logs --tail 10 swarmrest_db_1
+      $ docker logs --tail 10 swarmrest_db
       PostgreSQL init process complete; ready for start up.
 
       2018-11-15 02:19:24.920 UTC [1] LOG:  listening on IPv4 address "0.0.0.0", port 5432
@@ -58,15 +60,15 @@ To start the stack:
       ```
   1. trigger a schema-only sync (should take less than a minute)
       ```bash
-      docker exec -i swarmrest_db-sync_1 sh -c 'SCHEMA_ONLY=1 sh /run.sh'
+      docker exec -i swarmrest_db_sync sh -c 'SCHEMA_ONLY=1 sh /run.sh'
       ```
   1. trigger a data sync to get us up and running (should take around a minute)
       ```bash
-      docker exec -i swarmrest_db-sync_1 sh -c 'sh /run.sh'
+      docker exec -i swarmrest_db_sync sh -c 'sh /run.sh'
       ```
   1. connect as a superuser and run the `./script.sql` file to create all required objects for the API to run
       ```bash
-      cat script.sql | docker exec -i swarmrest_db_1 sh -c 'psql -U postgres -d swarm'
+      cat script.sql | docker exec -i swarmrest_db sh -c 'psql -U postgres -d swarm'
       ```
   1. if you're re-creating a prod instance, check the section below about restoring ES snapshots
   1. use the service
@@ -157,11 +159,12 @@ The name of the snapshot repo is defined in the `.env` file as `ES_SNAPSHOT_REPO
       ```
   1. if you get an error that indicies are already open, you can remove the ES container and its volume, then create a fresh one to start from a clean slate:
       ```bash
-      docker rm -f swarmrest_elk_1
+      docker rm -f swarmrest_elk
       docker volume rm swarmrest_elk-data
-      docker logs --tail 10 -f swarmrest_elk_1 # watch the logs until Kibana has started up
       ./start-or-restart.sh
-      # then try the restore again
+      docker logs --tail 10 -f swarmrest_elk # watch the logs until Kibana has started up
+      # <control-> to stop tailing logs...
+      # ...then try the restore again
       ```
 
 ## Connect to DB with psql

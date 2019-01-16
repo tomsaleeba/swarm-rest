@@ -2,6 +2,7 @@ version: '3.4'
 services:
   server:
     image: postgrest/postgrest:v5.1.0
+    container_name: swarmrest_server
     links:
       - db:db
     environment:
@@ -13,6 +14,7 @@ services:
       - db
   stats_facade:
     image: tomsaleeba/swarm-rest-metrics-facade:2.1.0
+    container_name: swarmrest_stats_facade
     links:
       - server:server
       - elk:elk
@@ -26,6 +28,7 @@ services:
       - elk
   filter_proxy:
     image: tomsaleeba/nginx-filter-proxy:1.3.0
+    container_name: swarmrest_filter_proxy
     links:
       - stats_facade:stats_facade
     ports:
@@ -39,17 +42,22 @@ services:
       - stats_facade
   db:
     image: postgres:10
+    container_name: swarmrest_db
     ports:
       - "5432:5432"
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
       POSTGRES_PASSWORD: ${DB_PASSWORD}
+      RO_USER_NAME: ${DB_READONLY_USER}
+      RO_USER_PASS: ${DB_READONLY_PASS}
     restart: unless-stopped
     volumes:
       - "swarm-pgdata:/var/lib/postgresql/data"
+      - "./postgres/add-readonly-user.sh:/docker-entrypoint-initdb.d/add-readonly-user.sh"
   elk:
     image: sebp/elk:642
+    container_name: swarmrest_elk
     ports:
       - "${KIBANA_PORT}:5601"
       - "${ES_PORT}:9200"
@@ -72,14 +80,16 @@ services:
       - "./elk-pre-hook.sh:/usr/local/bin/elk-pre-hooks.sh"
       - "./elk-post-hook.sh:/usr/local/bin/elk-post-hooks.sh"
   autoheal: # thanks https://stackoverflow.com/a/48538213/1410035
-    restart: always
     image: willfarrell/autoheal
+    container_name: swarmrest_autoheal
+    restart: always
     environment:
       - AUTOHEAL_CONTAINER_LABEL=all
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   es_snapshot:
     build: ./es-snapshot
+    container_name: swarmrest_es_backup
     links:
       - elk:elk
     environment:
@@ -93,6 +103,7 @@ services:
       - elk
   db_sync:
     build: ./db-sync
+    container_name: swarmrest_db_sync
     links:
       - db:db
     environment:

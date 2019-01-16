@@ -2,15 +2,25 @@
 # starts, or restarts, the stack
 cd `dirname "$0"`
 set -e
+# values for the DB that is part of this stack
 export DB_PASSWORD=somegoodpassword # TODO change me
+export DB_READONLY_USER=readonly # optionally change me
+export DB_READONLY_PASS=password # optionally change me
+
+# keys for an AWS account that can write to S3 for ES backups
 export AWS_ACCESS_KEY=key # TODO change me
 export AWS_SECRET=secret # TODO change me
+
+# DB credentials for the "source" or production DB that we clone from
 export SWARM_PROD_USER=user # TODO change me
 export SWARM_PROD_PASS=pass # TODO change me
 export SWARM_PROD_HOST=some.host # TODO change me
-export SWARM_PROD_PORT=5432
+export SWARM_PROD_PORT=5432 # change me if needed
 export SWARM_PROD_DB=somedb # TODO change me
+
+# DNS that points to this service (only supports one value)
 export PUBLIC_DNS_NAME=swarmapi.ausplots.aekos.org.au
+
 # if you run this in a non-prod environment, you can (should!) disable ES snapshots with:
 #export ES_SNAPSHOT_CRON_SCHEDULE='0 0 31 2 *' # feb 31, i.e. never, thanks https://stackoverflow.com/a/13938099/1410035
 
