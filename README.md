@@ -168,9 +168,9 @@ The name of the snapshot repo is defined in the `.env` file as `ES_SNAPSHOT_REPO
       ```
 
 ## Connect to DB with psql
-You can connect to the DB if you SSH to the docker host, then run:
+You can connect to the DB as the superuser if you SSH to the docker host, then run:
 ```bash
-docker exec -it swarmrest_db_1 sh -c 'psql -U postgres -d swarm'
+docker exec -it swarmrest_db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB'
 ```
 
 ## Known problems
