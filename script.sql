@@ -230,6 +230,37 @@ INNER JOIN public.basal_area AS ba
 INNER JOIN public.herbarium_determination AS hd
   ON hd.veg_barcode = ba.veg_barcode;
 
+DROP VIEW IF EXISTS api.samples;
+CREATE VIEW api.samples AS
+SELECT
+  vv.veg_barcode,
+  hd.herbarium_determination,
+  gv.primary_gen_barcode,
+  sl.site_location_name,
+  slv.site_location_visit_id,
+  slv.visit_start_date,
+  slp.latitude,
+  slp.longitude,
+  sl.bioregion_name,
+  slv.vegetation_condition,
+  slv.climatic_condition,
+  slv.disturbance,
+  sl.landform_pattern,
+  slv.soil_observation_type,
+  slv.location_description
+FROM public.site_location AS sl
+INNER JOIN public.published_site_location_visit AS slv
+  ON slv.site_location_id = sl.site_location_id
+INNER JOIN public.site_location_point AS slp
+  ON slp.point = 'SW' -- need to pick a single point to get coordinates
+  AND slp.site_location_id = sl.site_location_id
+INNER JOIN public.veg_vouchers AS vv
+  ON vv.site_location_visit_id = slv.site_location_visit_id
+LEFT OUTER JOIN public.herbarium_determination AS hd
+  ON hd.veg_barcode = vv.veg_barcode
+LEFT OUTER JOIN public.genetic_vouchers AS gv
+  ON gv.veg_barcode = vv.veg_barcode;
+
 GRANT SELECT ON api.site TO web_anon;
 GRANT SELECT ON api.structural_summary TO web_anon;
 GRANT SELECT ON api.soil_bulk_density TO web_anon;
@@ -238,4 +269,5 @@ GRANT SELECT ON api.soil_subsite TO web_anon;
 GRANT SELECT ON api.veg_voucher TO web_anon;
 GRANT SELECT ON api.veg_pi TO web_anon;
 GRANT SELECT ON api.veg_basal TO web_anon;
+GRANT SELECT ON api.samples TO web_anon;
 
