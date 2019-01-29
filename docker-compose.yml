@@ -27,7 +27,7 @@ services:
       - server
       - elk
   filter_proxy:
-    image: tomsaleeba/nginx-filter-proxy:1.3.0
+    image: tomsaleeba/nginx-filter-proxy:1.4.0
     container_name: swarmrest_filter_proxy
     links:
       - stats_facade:stats_facade
