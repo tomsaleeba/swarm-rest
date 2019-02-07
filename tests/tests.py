@@ -19,39 +19,56 @@ BASE_URL = get_base_url()
 class TestUM(unittest.TestCase):
 
     def test_swagger_01(self):
+        '''Does the swagger endpoint work?'''
         the_root = ''
         body = get_json(the_root)
         self.assertEqual(body['swagger'], '2.0')
 
     def test_site_01(self):
+        '''Is the /site endpoint returning the expected number of fields?'''
         item = get_single_element_json('site', 41, self)
         self.assertTrue(item['established_date'])
 
+    def test_site_02(self):
+        '''Is the endpoint with unpublished data protected?'''
+        resp = requests.get(build_url('site_inc_unpub'))
+        self.assertEquals(resp.status_code, 401)
+
     def test_structural_summary_01(self):
-        item = get_single_element_json('structural_summary', 13, self)
+        '''Is the /structural_summary endpoint returning the expected number of fields?'''
+        item = get_single_element_json('structural_summary', 14, self)
         self.assertTrue(item['phenology_comment'])
 
     def test_soil_bulk_density_01(self):
-        item = get_single_element_json('soil_bulk_density', 13, self)
+        '''Is the /soil_bulk_density endpoint returning the expected number of fields?'''
+        item = get_single_element_json('soil_bulk_density', 14, self)
         self.assertTrue(item['sample_id'])
 
     def test_soil_characterisation_01(self):
-        item = get_single_element_json('soil_characterisation', 32, self)
-        self.assertTrue(item['upper_depth'])
+        '''Is the /soil_characterisation endpoint returning the expected number of fields?'''
+        item = get_single_element_json('soil_characterisation', 33, self)
+        try:
+            float(item['upper_depth'])
+        except TypeError:
+            self.fail('upper_depth is not a number')
 
     def test_soil_subsite_01(self):
-        item = get_single_element_json('soil_subsite', 10, self)
+        '''Is the /soil_subsite endpoint returning the expected number of fields?'''
+        item = get_single_element_json('soil_subsite', 11, self)
         self.assertTrue(item['subsite_id'])
 
     def test_veg_voucher_01(self):
+        '''Is the /veg_voucher endpoint returning the expected number of fields?'''
         item = get_single_element_json('veg_voucher', 11, self)
         self.assertTrue(item['veg_barcode'])
 
     def test_veg_pi_01(self):
+        '''Is the /veg_pi endpoint returning the expected number of fields?'''
         item = get_single_element_json('veg_pi', 11, self)
         self.assertIsNotNone(item['point_number'])
 
     def test_veg_basal_01(self):
+        '''Is the /veg_basal endpoint returning the expected number of fields?'''
         item = get_single_element_json('veg_basal', 9, self)
         self.assertTrue(item['basal_area'])
 

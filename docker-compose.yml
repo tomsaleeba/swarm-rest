@@ -1,7 +1,7 @@
 version: '3.4'
 services:
   server:
-    image: postgrest/postgrest:v5.1.0
+    image: postgrest/postgrest:v5.2.0
     container_name: swarmrest_server
     links:
       - db:db
@@ -9,11 +9,12 @@ services:
       PGRST_DB_URI: postgres://${DB_USER}:${DB_PASSWORD}@db:5432/${DB_NAME}
       PGRST_DB_SCHEMA: api
       PGRST_DB_ANON_ROLE: web_anon
+      PGRST_JWT_SECRET: ${PGRST_JWT_SECRET}
     restart: unless-stopped
     depends_on:
       - db
   stats_facade:
-    image: tomsaleeba/swarm-rest-metrics-facade:2.1.0
+    image: ternandsparrow/swarm-rest-metrics-facade:2.1.1
     container_name: swarmrest_stats_facade
     links:
       - server:server
@@ -27,7 +28,7 @@ services:
       - server
       - elk
   filter_proxy:
-    image: tomsaleeba/nginx-filter-proxy:1.4.0
+    image: ternandsparrow/nginx-filter-proxy:1.6.0
     container_name: swarmrest_filter_proxy
     links:
       - stats_facade:stats_facade

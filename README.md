@@ -1,6 +1,6 @@
 > RESTful HTTP API to serve up Ausplots data from a postgres database using postgREST
 
-This directory contains the files required to run the HTTP REST API server that the [ausplotsR client](https://github.com/GregGuerin/ausplotsR) talks to.
+This directory contains the files required to run the HTTP REST API server that the [ausplotsR client](https://github.com/ternaustralia/ausplotsR) talks to.
 
 The DB init script (`script.sql`) does a number of things:
   1. create a schema just for the API, named `api`
@@ -9,11 +9,15 @@ The DB init script (`script.sql`) does a number of things:
 
 postgREST will then serve everything from the `api` schema and because they're just views, they'll be read-only.
 
-We collect usage metrics on the service by intercepting all traffic to the API and then store these metrics in ElasticSearch. Kibana is included for visualising the usage. The ES data is also periodcally snapshotted onto S3 for safe keeping.
+We collect usage metrics on the service by intercepting all traffic to the API and then store these metrics in
+ElasticSearch. Kibana is included for visualising the usage. The ES data is also periodcally snapshotted onto
+S3 for safe keeping.
 
-As this is just a mirror of production, we have a container to periodically synchronise the data in SWARM production into our DB.
+As this is just a mirror of production, we have a container to periodically synchronise the data in SWARM
+production into our DB.
 
-We also have a read-only user auto-created so the DB can be used as a safe way to share a fresh-ish mirror of production.
+We also have a read-only user auto-created so the DB can be used as a safe way to share a fresh-ish mirror of
+production.
 
 ## Running the stack
 
@@ -66,23 +70,35 @@ To start the stack:
       ```bash
       docker exec -i swarmrest_db_sync sh -c 'sh /run.sh'
       ```
-  1. connect as a superuser and run the `./script.sql` file to create all required objects for the API to run
+  1. connect as a superuser and run the `./script.sql` file to create all required objects for the API to run.
+     See section 'Modifying our copy of the schema' for more discussion about re-running.
       ```bash
-      cat script.sql | docker exec -i swarmrest_db sh -c 'psql -U postgres -d swarm'
+      cat script.sql | docker exec -i swarmrest_db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB --set=ON_ERROR_STOP=1'
+      ```
+  1. look for the success output at the end of the script:
+      ```
+      outcome 
+      ---------
+      success
+      (1 row)
       ```
   1. if you're re-creating a prod instance, check the section below about restoring ES snapshots
   1. use the service
       ```bash
-      curl -v <hostname>/site?limit=1
+      curl -v '<hostname:port>/site?limit=1'
       # the response should be a JSON array of objects, e.g. [{"site_location_name":"...
       ```
   1. check the Kibana dashboard for metrics at http://<hostname>:5601 (port can be changed in `.env`)
 
-Warning: the Kibana (ELK stack) instance has no security/auth so don't expose it to the internet. Or if you do, add some security. A nice way to connect to the Kibana dashboard on a VM without opening the firewall is to use SSH local port forwarding (https://help.ubuntu.com/community/SSH/OpenSSH/PortForwarding#Local_Port_Forwarding).
+Warning: the Kibana (ELK stack) instance has no security/auth so don't expose it to the internet. Or if you
+do, add some security. A nice way to connect to the Kibana dashboard on a VM without opening the firewall is
+to use SSH local port forwarding
+(https://help.ubuntu.com/community/SSH/OpenSSH/PortForwarding#Local_Port_Forwarding).
 
 ## Running health check tests
 
-There are some brief health check tests you can run against a live service to make sure it's returning what you expect. First, make sure you satisfy the requirements:
+There are some brief health check tests you can run against a live service to make sure it's returning what
+you expect. First, make sure you satisfy the requirements:
 
   1. python 2.7
   1. python `requests`
@@ -97,8 +113,27 @@ For example, you could pass a URL like
 ./tests/tests.py http://swarmapi.ausplots.aekos.org.au
 ```
 
+## Modifying our copy of the schema
+In the set up steps, we first sync the schema, then sync the data then run our script to create the bits we
+need. Future data syncs won't touch the schema, which means our script can make changes -- like adding row
+level security or granting access -- to our copy of the schema. If you ever do another sync of the schema, you
+*must* re-run the script. If it re-running doesn't work for any reason, you can recover by killing the PG
+container and starting again:
+
+  1. stop the stack
+      ```bash
+      docker-compose down
+      ```
+  1. destroy the volume from the postgres container
+      ```bash
+      docker volume rm swarm-rest_swarm-pgdata
+      ```
+  1. continue with the steps in the initial setup starting from running the `start-or-restart.sh` script
+
 ## Stopping the stack
-The stack is designed to always keep running, even after a server restart, until you manually stop it. The data for postgres and ElasticSearch are stored in Docker data volumes. This means you can stop and destroy the stack, but **keep the data** with:
+The stack is designed to always keep running, even after a server restart, until you manually stop it. The
+data for postgres and ElasticSearch are stored in Docker data volumes. This means you can stop and destroy the
+stack, but **keep the data** with:
 ```bash
 docker-compose down
 ```
@@ -119,7 +154,9 @@ GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO syncuser;
 
 ## Restoring ElasticSearch snapshots
 
-The name of the snapshot repo is defined in the `.env` file as `ES_SNAPSHOT_REPO`. For this example, let's assume that it's `swarm-s3-backup`. Also, as we don't expose the ES instance to the public internet, you'll need to run these command on the docker host to have access (or through an SSH tunnel if you're fancy).
+The name of the snapshot repo is defined in the `.env` file as `ES_SNAPSHOT_REPO`. For this example, let's
+assume that it's `swarm-s3-backup`. Also, as we don't expose the ES instance to the public internet, you'll
+need to run these command on the docker host to have access (or through an SSH tunnel if you're fancy).
 
   1. let's list all the available snapshots
       ```console
@@ -157,7 +194,8 @@ The name of the snapshot repo is defined in the `.env` file as `ES_SNAPSHOT_REPO
         }
       }
       ```
-  1. if you get an error that indicies are already open, you can remove the ES container and its volume, then create a fresh one to start from a clean slate:
+  1. if you get an error that indicies are already open, you can remove the ES container and its volume, then
+     create a fresh one to start from a clean slate:
       ```bash
       docker rm -f swarmrest_elk
       docker volume rm swarmrest_elk-data
@@ -175,6 +213,8 @@ docker exec -it swarmrest_db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB'
 
 ## Known problems
   1. Kibana has no auth so we can't open it to the public yet
-  1. sometimes ES dies inside the ELK stack but Docker can't see it. Either add a health check or go for the official, separate images for Kibana and ES so they're PID 1 and can be monitored (and bounced if they die)
+  1. sometimes ES dies inside the ELK stack but Docker can't see it. We're using a health check and the
+     autoheal container but as an alternative we could go for the official, separate images for Kibana and ES
+     so they're PID 1 and can be monitored and bounced by docker if they die.
   1. consider adding fail2ban to the stack to help nginx provide protection. Maybe something like https://github.com/crazy-max/docker-fail2ban but that writes error.log to stderr so that needs to be piped into file too so f2b can read it.
 
