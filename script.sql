@@ -1,6 +1,6 @@
 DROP SCHEMA IF EXISTS api CASCADE;
-DROP ROLE web_anon;
-DROP ROLE staff;
+DROP ROLE IF EXISTS web_anon;
+DROP ROLE IF EXISTS staff;
 
 CREATE SCHEMA api;
 SET search_path = "$user", public, api; -- find 'search_path' in https://www.postgresql.org/docs/10/static/ddl-schemas.html for doco
