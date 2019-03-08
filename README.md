@@ -50,6 +50,8 @@ To start the stack:
       ./start-or-restart.sh
       # or if you need to force a rebuild of the 'curl-cron' and 'db-sync' images, which you should do after a `git pull`
       ./start-or-restart.sh --build
+      # or if you don't want the ElasticSearch related infrastructure (like during dev)
+      env NO_ES=1 ./start-or-restart.sh
       ```
   1. wait until the `db` container is up and running (shouldn't take long):
       ```console
@@ -64,11 +66,11 @@ To start the stack:
       ```
   1. trigger a schema-only sync (should take less than a minute)
       ```bash
-      docker exec -i swarmrest_db_sync sh -c 'SCHEMA_ONLY=1 sh /run.sh'
+      docker exec -i swarmrest_db_sync sh -c 'SCHEMA_ONLY=1 sh /app/run.sh'
       ```
   1. trigger a data sync to get us up and running (should take around a minute)
       ```bash
-      docker exec -i swarmrest_db_sync sh -c 'sh /run.sh'
+      docker exec -i swarmrest_db_sync sh -c 'sh /app/run.sh'
       ```
   1. connect as a superuser and run the `./script.sql` file to create all required objects for the API to run.
      See section 'Modifying our copy of the schema' for more discussion about re-running.
@@ -77,7 +79,7 @@ To start the stack:
       ```
   1. look for the success output at the end of the script:
       ```
-      outcome 
+      outcome
       ---------
       success
       (1 row)

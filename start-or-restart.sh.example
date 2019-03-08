@@ -29,6 +29,12 @@ export PGRST_JWT_SECRET=reallyreallyreallyreallyverysafe # TODO change me, must 
 
 # you can add any other values from .env here to override them
 
-docker-compose up -d $@
+filesFragment=''
+if [ "$NO_ES" == "1" ]; then
+  echo '[INFO] ElasticSearch infrastructure will NOT be started'
+  filesFragment='-f docker-compose.yml'
+fi
+
+docker-compose $filesFragment up -d $@
 echo '[INFO] stack started'
 

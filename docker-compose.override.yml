@@ -1,0 +1,63 @@
+# adds ElasticSearch and stats facade, which you may not want during dev
+version: '3.4'
+services:
+  stats_facade:
+    image: ternandsparrow/swarm-rest-metrics-facade:2.1.1
+    container_name: swarmrest_stats_facade
+    links:
+      - server:server
+      - elk:elk
+    environment:
+      TARGET_URL: http://server:3000
+      ES_URL: http://elk:${ES_PORT}
+      INDEX_NAME: ${ES_INDEX_NAME}
+    restart: unless-stopped
+    depends_on:
+      - server
+      - elk
+  filter_proxy:
+    environment:
+      TARGET_SERVER: 'stats_facade:80'
+    depends_on:
+      - stats_facade
+  elk:
+    image: sebp/elk:642
+    container_name: swarmrest_elk
+    ports:
+      - "${KIBANA_PORT}:5601"
+      - "${ES_PORT}:9200"
+    environment:
+      - LOGSTASH_START=0 # we don't need LogStash
+      - AWS_ACCESS_KEY # override in shell at deploy time
+      - AWS_SECRET # override in shell at deploy time
+      - AWS_BUCKET=${S3_BUCKET}
+      - ES_SNAPSHOT_REPO
+      - KIBANA_CONNECT_RETRY=60 # the default 30 seconds doesn't seem long enough
+    restart: unless-stopped
+    healthcheck:
+      test: curl -f localhost:9200/_cluster/health || exit 1
+      interval: 1m30s
+      timeout: 10s
+      retries: 1
+      start_period: 99s
+    volumes:
+      - "elk-data:/var/lib/elasticsearch"
+      - "./elk-pre-hook.sh:/usr/local/bin/elk-pre-hooks.sh"
+      - "./elk-post-hook.sh:/usr/local/bin/elk-post-hooks.sh"
+  es_snapshot:
+    build: ./es-snapshot
+    container_name: swarmrest_es_backup
+    links:
+      - elk:elk
+    environment:
+      ES_HOST: elk
+      ES_PORT: ${ES_PORT}
+      ES_SNAPSHOT_REPO: ${ES_SNAPSHOT_REPO}
+      BACKUP_PREFIX: ${ES_SNAPSHOT_PREFIX}
+      CRON_SCHEDULE: ${ES_SNAPSHOT_CRON_SCHEDULE}
+    restart: unless-stopped
+    depends_on:
+      - elk
+volumes:
+  elk-data:
+
