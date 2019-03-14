@@ -407,12 +407,12 @@ SELECT
   'plot:Site' AS "rdf:type",
   sl.site_location_name AS "rdfs:label",
   sl.established_date AS "prov:generatedAtTime",
-  json_agg(site_point_id(slp.id)) AS "locn:location"
+  json_agg(site_point_id(slp.id)) AS "locn:location" -- TODO could nest full objects
+  -- TODO should we create a link to members, ssn-ext:hasMember?
 FROM site_location AS sl
 INNER JOIN site_location_point AS slp
   ON sl.site_location_id = slp.site_location_id
-GROUP BY 1,2,3,4,5,6
-;
+GROUP BY 1,2,3,4,5,6;
 
 
 DROP VIEW IF EXISTS api.om_site_visit;
@@ -426,8 +426,8 @@ SELECT
   slv.visit_start_date AS "prov:startedAtTime", -- is it undecided between this and sosa:phenomenonTime, or do we need both?
   slv.visit_end_date AS "prov:endedAtTime",
   slv.visit_notes AS "rdfs:comment"
-FROM site_location_visit AS slv
-;
+  -- TODO should we create a link to members, ssn-ext:hasMember?
+FROM site_location_visit AS slv;
 
 
 DROP VIEW IF EXISTS api.om_site_point;
@@ -442,8 +442,7 @@ SELECT
   slp.latitude AS "geo:lat", -- or locn:geometry?
   slp.longitude AS "geo:long", -- or locn:geometry?
   slp.threedcq AS "geo:alt" -- or locn:geometry?
-FROM site_location_point AS slp
-;
+FROM site_location_point AS slp;
 
 
 DROP VIEW IF EXISTS api.om_procedure;
@@ -625,18 +624,28 @@ FROM soil_bulk_density AS sbd;
 DROP VIEW IF EXISTS api.om_observation_collection;
 CREATE VIEW api.om_observation_collection AS
 SELECT
-  context_url() AS "@context",
-  'ssn-ext:ObservationCollection' AS "rdf:type",
-  partial.*,
-  observation_collection_id(partial."_id") AS "@id",
-  -- TODO would be nice to nest hasMember objects (doesn't perform with views) or have tidier URL
-  build_url('/om_observation?%22sosa:hasFeatureOfInterest%22=like.*' || partial."_id") AS "ssn-ext:hasMember"
+  oc.*,
+  json_agg(obs.json_object) AS "ssn-ext:hasMember"
 FROM (
-  SELECT * FROM api._soil_characterisation_oc
-  UNION ALL
-  SELECT * FROM api._soil_bulk_density_oc
-) AS partial;
-
+  SELECT
+    context_url() AS "@context",
+    'ssn-ext:ObservationCollection' AS "rdf:type",
+    partial.*,
+    observation_collection_id(partial."_id") AS "@id"
+  FROM (
+    SELECT * FROM api._soil_characterisation_oc
+    UNION ALL
+    SELECT * FROM api._soil_bulk_density_oc
+  ) AS partial
+) AS oc
+INNER JOIN (
+  SELECT
+    "sosa:hasFeatureOfInterest",
+    row_to_json(api.om_observation.*) AS json_object
+  FROM api.om_observation
+) AS obs
+  ON obs."sosa:hasFeatureOfInterest" = oc."@id"
+GROUP BY 1,2,3,4,5,6,7,8,9;
 
 DROP VIEW IF EXISTS api.om_context;
 CREATE VIEW api.om_context AS
