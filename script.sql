@@ -21,6 +21,68 @@ FROM public.site_location_visit
 WHERE ok_to_publish = false;
 
 
+-- public_hostname() function is created by set-hostname-for-jsonld.sh
+
+
+DROP FUNCTION IF EXISTS escape_spaces;
+CREATE FUNCTION escape_spaces(val text) RETURNS text AS $$ BEGIN
+  RETURN replace(val, ' ', '%20');
+END $$ LANGUAGE PLPGSQL IMMUTABLE;
+
+
+DROP FUNCTION IF EXISTS build_url;
+CREATE FUNCTION build_url(val text) RETURNS text AS $$ BEGIN
+  RETURN public_url_prefix() || escape_spaces(val);
+END $$ LANGUAGE PLPGSQL IMMUTABLE;
+
+
+DROP FUNCTION IF EXISTS context_url;
+CREATE FUNCTION context_url() RETURNS text AS $$ BEGIN
+  RETURN build_url('/om_context');
+END $$ LANGUAGE PLPGSQL IMMUTABLE;
+
+
+DROP FUNCTION IF EXISTS site_id;
+CREATE FUNCTION site_id(id_fragment integer) RETURNS text AS $$ BEGIN
+  RETURN build_url('/om_site?_id=eq.' || id_fragment);
+END $$ LANGUAGE PLPGSQL IMMUTABLE;
+
+
+DROP FUNCTION IF EXISTS site_visit_id;
+CREATE FUNCTION site_visit_id(id_fragment integer) RETURNS text AS $$ BEGIN
+  RETURN build_url('/om_site_visit?_id=eq.' || id_fragment);
+END $$ LANGUAGE PLPGSQL IMMUTABLE;
+
+
+DROP FUNCTION IF EXISTS site_point_id;
+CREATE FUNCTION site_point_id(id_fragment integer) RETURNS text AS $$ BEGIN
+  RETURN build_url('/om_site_point?_id=eq.' || id_fragment);
+END $$ LANGUAGE PLPGSQL IMMUTABLE;
+
+
+DROP FUNCTION IF EXISTS procedure_id;
+CREATE FUNCTION procedure_id(id_fragment text) RETURNS text AS $$ BEGIN
+  RETURN build_url('/om_procedure?%22rdfs:label%22=eq.' || id_fragment);
+END $$ LANGUAGE PLPGSQL IMMUTABLE;
+
+
+DROP FUNCTION IF EXISTS create_local_id;
+CREATE FUNCTION create_local_id(VARIADIC id_fragment text[]) RETURNS text AS $$ BEGIN
+  RETURN array_to_string(id_fragment, '/', '');
+END $$ LANGUAGE PLPGSQL IMMUTABLE;
+
+
+DROP FUNCTION IF EXISTS observation_id;
+CREATE FUNCTION observation_id(VARIADIC id_fragment text[]) RETURNS text AS $$ BEGIN
+  RETURN build_url('/om_observation?_id=eq.' || create_local_id(VARIADIC id_fragment));
+END $$ LANGUAGE PLPGSQL IMMUTABLE;
+
+
+DROP FUNCTION IF EXISTS observation_collection_id;
+CREATE FUNCTION observation_collection_id(VARIADIC id_fragment text[]) RETURNS text AS $$ BEGIN
+  RETURN build_url('/om_observation_collection?_id=eq.' || create_local_id(VARIADIC id_fragment));
+END $$ LANGUAGE PLPGSQL IMMUTABLE;
+
 
 DROP VIEW IF EXISTS api.site_inc_unpub;
 CREATE VIEW api.site_inc_unpub AS
@@ -310,7 +372,6 @@ FROM api.veg_basal_inc_unpub
 WHERE site_location_visit_id NOT IN (SELECT * FROM unpublished_site_location_visit_ids);
 
 
-
 DROP VIEW IF EXISTS api.search_inc_unpub;
 CREATE VIEW api.search_inc_unpub AS
 SELECT
@@ -337,6 +398,273 @@ FROM api.search_inc_unpub
 WHERE site_location_visit_id NOT IN (SELECT * FROM unpublished_site_location_visit_ids);
 
 
+DROP VIEW IF EXISTS api.om_site;
+CREATE VIEW api.om_site AS -- TODO make inc_unpub version
+SELECT
+  context_url() AS "@context",
+  sl.site_location_id AS "_id",
+  site_id(sl.site_location_id) AS "@id",
+  'plot:Site' AS "rdf:type",
+  sl.site_location_name AS "rdfs:label",
+  sl.established_date AS "prov:generatedAtTime",
+  json_agg(site_point_id(slp.id)) AS "locn:location"
+FROM site_location AS sl
+INNER JOIN site_location_point AS slp
+  ON sl.site_location_id = slp.site_location_id
+GROUP BY 1,2,3,4,5,6
+;
+
+
+DROP VIEW IF EXISTS api.om_site_visit;
+CREATE VIEW api.om_site_visit AS -- TODO make inc_unpub version
+SELECT
+  context_url() AS "@context",
+  slv.site_location_visit_id AS "_id",
+  site_visit_id(slv.site_location_visit_id) AS "@id",
+  'plot:SiteVisit' AS "rdf:type",
+  site_id(slv.site_location_id) AS "sosa:hasFeatureOfInterest",
+  slv.visit_start_date AS "prov:startedAtTime", -- is it undecided between this and sosa:phenomenonTime, or do we need both?
+  slv.visit_end_date AS "prov:endedAtTime",
+  slv.visit_notes AS "rdfs:comment"
+FROM site_location_visit AS slv
+;
+
+
+DROP VIEW IF EXISTS api.om_site_point;
+CREATE VIEW api.om_site_point AS -- TODO make inc_unpub version
+SELECT
+  context_url() AS "@context",
+  slp.id AS "_id",
+  site_point_id(slp.id) AS "@id",
+  'plot:Location' AS "rdf:type",
+  site_id(slp.site_location_id) AS "plot:isLocationOf",
+  slp.point AS "dct:description",
+  slp.latitude AS "geo:lat", -- or locn:geometry?
+  slp.longitude AS "geo:long", -- or locn:geometry?
+  slp.threedcq AS "geo:alt" -- or locn:geometry?
+FROM site_location_point AS slp
+;
+
+
+DROP VIEW IF EXISTS api.om_procedure;
+CREATE VIEW api.om_procedure AS
+SELECT
+  context_url() AS "@context",
+  'sosa:Procedure' AS "rdf:type",
+  procedure_id(code) AS "@id",
+  code AS "rdfs:label",
+  comm AS "rdfs:comment"
+FROM (
+  SELECT
+    'APSOIL01' AS code,
+    'TODO add text about procedure' AS comm -- TODO
+  UNION ALL
+  SELECT
+    'APSOIL02',
+    'TODO add text about procedure' -- TODO
+) AS s;
+
+
+DROP VIEW IF EXISTS api._soil_characterisation_obs;
+CREATE VIEW api._soil_characterisation_obs AS
+SELECT
+  create_local_id('soil_characterisation'::text, sc.site_location_visit_id::text, sc.layer_barcode, the_obs.op) AS "_id",
+  slv.visit_start_date AS "sosa:resultTime",
+  observation_collection_id('soil_characterisation'::text, sc.site_location_visit_id::text, sc.layer_barcode) as "sosa:hasFeatureOfInterest",
+  the_obs.op AS "sosa:observedProperty",
+  the_obs.r AS "sosa:hasResult"
+FROM soil_characterisation AS sc
+INNER JOIN site_location_visit AS slv
+  ON sc.site_location_visit_id = slv.site_location_visit_id
+INNER JOIN (
+  -- first one sets up the column names
+  SELECT id, 'collected_by' AS op, collected_by::text AS r FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'colour_when_dry', colour_when_dry::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'colour_when_moist', colour_when_moist::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'ec', ec::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'effervescence', effervescence::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'horizon', horizon::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'layer_barcode', layer_barcode::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'lower_depth', lower_depth::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'mottles_abundance', mottles_abundance::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'mottles_colour', mottles_colour::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'mottles_size', mottles_size::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'next_size_1', next_size_1::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'next_size_2', next_size_2::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'next_size_type_1', next_size_type_1::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'next_size_type_2', next_size_type_2::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'pedality_fabric', pedality_fabric::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'pedality_grade', pedality_grade::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'ph', ph::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'segregations_abundance', segregations_abundance::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'segregations_form', segregations_form::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'segregations_nature', segregations_nature::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'segregations_size', segregations_size::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'smallest_size_1', smallest_size_1::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'smallest_size_2', smallest_size_2::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'smallest_size_type_1', smallest_size_type_1::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'smallest_size_type_2', smallest_size_type_2::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'texture_grade', texture_grade::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'texture_modifier', texture_modifier::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'texture_qualifier', texture_qualifier::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'upper_depth', upper_depth::text FROM soil_characterisation
+) AS the_obs
+ON sc.id = the_obs.id;
+
+
+DROP VIEW IF EXISTS api._soil_bulk_density_obs;
+CREATE VIEW api._soil_bulk_density_obs AS
+SELECT
+  create_local_id('soil_bulk_density'::text, sbd.site_location_visit_id::text, sbd.sample_id, the_obs.op) AS "_id",
+  slv.visit_start_date AS "sosa:resultTime",
+  observation_collection_id('soil_bulk_density'::text, sbd.site_location_visit_id::text, sbd.sample_id) as "sosa:hasFeatureOfInterest",
+  the_obs.op AS "sosa:observedProperty",
+  the_obs.r AS "sosa:hasResult"
+FROM soil_bulk_density AS sbd
+INNER JOIN site_location_visit AS slv
+  ON sbd.site_location_visit_id = slv.site_location_visit_id
+INNER JOIN (
+  -- first one sets up the column names
+  SELECT id, 'fine_earth_bulk_density' AS op, fine_earth_bulk_density::text AS r FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'fine_earth_volume', fine_earth_volume::text FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'fine_earth_weight', fine_earth_weight::text FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'fine_earth_weight_in_bag', fine_earth_weight_in_bag::text FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'gravel_bulk_density', gravel_bulk_density::text FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'gravel_volume', gravel_volume::text FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'gravel_weight', gravel_weight::text FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'oven_dried_weight_in_bag', oven_dried_weight_in_bag::text FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'paper_bag_weight', paper_bag_weight::text FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'ring_volume', ring_volume::text FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'ring_weight', ring_weight::text FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'sample_id', sample_id::text FROM soil_bulk_density
+  UNION ALL
+  SELECT id, 'wet_weight_in_bag', wet_weight_in_bag::text FROM soil_bulk_density
+) AS the_obs
+ON sbd.id = the_obs.id;
+
+
+DROP VIEW IF EXISTS api.om_observation;
+CREATE VIEW api.om_observation AS
+SELECT
+  context_url() AS "@context",
+  observation_id(partial."_id") AS "@id",
+  'sosa:Observation' AS "rdf:type",
+  'unknown' AS "sosa:phenomenonTime",
+  partial.*
+FROM (
+  SELECT * FROM api._soil_characterisation_obs
+  UNION ALL
+  SELECT * FROM api._soil_bulk_density_obs
+) AS partial;
+
+
+DROP VIEW IF EXISTS api._soil_characterisation_oc;
+CREATE VIEW api._soil_characterisation_oc AS
+SELECT
+  create_local_id('soil_characterisation'::text, sc.site_location_visit_id::text, sc.layer_barcode) AS "_id",
+  'ogroup:SoilC14n' AS "dct:type", -- FIXME not in vocab
+  sc.comments AS "rdfs:comment",
+  sc.layer_barcode AS "rdfs:label",
+  procedure_id('APSOIL01') AS "sosa:usedProcedure", -- TODO same procedure for all?
+  site_visit_id(sc.site_location_visit_id) as "sosa:hasFeatureOfInterest"
+FROM soil_characterisation AS sc;
+
+
+DROP VIEW IF EXISTS api._soil_bulk_density_oc;
+CREATE VIEW api._soil_bulk_density_oc AS
+SELECT
+  create_local_id('soil_bulk_density'::text, sbd.site_location_visit_id::text, sbd.sample_id) AS "_id",
+  'ogroup:SoilBulk' AS "dct:type", -- FIXME not in vocab
+  null AS "rdfs:comment",
+  'Visit ID: ' || sbd.site_location_visit_id || ', sample ID: ' || sbd.sample_id AS "rdfs:label",
+  procedure_id('APSOIL02') AS "sosa:usedProcedure", -- TODO same procedure for all?
+  site_visit_id(sbd.site_location_visit_id) as "sosa:hasFeatureOfInterest"
+FROM soil_bulk_density AS sbd;
+
+
+DROP VIEW IF EXISTS api.om_observation_collection;
+CREATE VIEW api.om_observation_collection AS
+SELECT
+  context_url() AS "@context",
+  'ssn-ext:ObservationCollection' AS "rdf:type",
+  partial.*,
+  observation_collection_id(partial."_id") AS "@id",
+  -- TODO would be nice to nest hasMember objects (doesn't perform with views) or have tidier URL
+  build_url('/om_observation?%22sosa:hasFeatureOfInterest%22=like.*' || partial."_id") AS "ssn-ext:hasMember"
+FROM (
+  SELECT * FROM api._soil_characterisation_oc
+  UNION ALL
+  SELECT * FROM api._soil_bulk_density_oc
+) AS partial;
+
+
+DROP VIEW IF EXISTS api.om_context;
+CREATE VIEW api.om_context AS
+SELECT
+  'http://www.tern.org.au/ns/data/' AS data,
+  'http://purl.org/dc/terms/' AS dct,
+  'http://rs.tdwg.org/dwc/terms/' AS dwcterms,
+  'http://www.opengis.net/ont/geosparql#' AS geosparql,
+  'http://www.w3.org/ns/locn#' AS locn,
+  'http://www.w3.org/ns/odrl/2/' AS odrl,
+  'http://registry.it.csiro.au/sandbox/tern/plot/ogroup/' AS ogroup, -- TODO update if 'sandbox' is removed
+  'http://www.tern.org.au/cv/op/' AS op,
+  'http://www.w3.org/2002/07/owl#' AS owl,
+  'http://www.tern.org.au/ns/plot/' AS plot,
+  'http://www.tern.org.au/ns/plot/x/' AS "plot-x",
+  'http://www.w3.org/ns/prov#' AS prov,
+  'http://www.w3.org/1999/02/22-rdf-syntax-ns#' AS rdf,
+  'http://www.w3.org/2000/01/rdf-schema#' AS rdfs,
+  'http://www.w3.org/2004/02/skos/core#' AS skos,
+  'http://www.w3.org/ns/sosa/' AS sosa,
+  'http://www.w3.org/ns/ssn/' AS ssn,
+  'http://www.w3.org/ns/ssn/ext/' AS "ssn-ext",
+  'http://www.w3.org/2006/time#' AS time,
+  'http://www.w3.org/2003/01/geo/wgs84_pos#' AS w3cgeo,
+  'http://www.w3.org/2001/XMLSchema#' AS xsd
+;
+
+
 GRANT SELECT ON api.site_inc_unpub TO staff;
 GRANT SELECT ON api.structural_summary_inc_unpub TO staff;
 GRANT SELECT ON api.soil_bulk_density_inc_unpub TO staff;
@@ -356,5 +684,13 @@ GRANT SELECT ON api.veg_voucher TO web_anon;
 GRANT SELECT ON api.veg_pi TO web_anon;
 GRANT SELECT ON api.veg_basal TO web_anon;
 GRANT SELECT ON api.search TO web_anon;
+
+GRANT SELECT ON api.om_context TO web_anon;
+GRANT SELECT ON api.om_site TO web_anon;
+GRANT SELECT ON api.om_site_visit TO web_anon;
+GRANT SELECT ON api.om_site_point TO web_anon;
+GRANT SELECT ON api.om_procedure TO web_anon;
+GRANT SELECT ON api.om_observation TO web_anon;
+GRANT SELECT ON api.om_observation_collection TO web_anon;
 
 SELECT 'success' AS outcome;

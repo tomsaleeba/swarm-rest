@@ -64,6 +64,10 @@ To start the stack:
       2018-11-15 02:19:24.964 UTC [70] LOG:  database system was shut down at 2018-11-15 02:19:24 UTC
       2018-11-15 02:19:24.976 UTC [1] LOG:  database system is ready to accept connections
       ```
+  1. create a function that we need to build URLs in the JSON-LD data:
+      ```bash
+      ./set-hostname-for-jsonld.sh
+      ```
   1. trigger a schema-only sync (should take less than a minute)
       ```bash
       docker exec -i swarmrest_db_sync sh -c 'SCHEMA_ONLY=1 sh /app/run.sh'

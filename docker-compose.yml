@@ -22,6 +22,7 @@ services:
     environment:
       TARGET_SERVER: 'server:3000'
       DNS_NAME: ${PUBLIC_DNS_NAME}
+      NO_CACHE: 1 # TODO remove line when we have something stable
     restart: unless-stopped
     depends_on:
       - server
@@ -36,6 +37,8 @@ services:
       POSTGRES_PASSWORD: ${DB_PASSWORD}
       RO_USER_NAME: ${DB_READONLY_USER}
       RO_USER_PASS: ${DB_READONLY_PASS}
+      PUBLIC_HOSTNAME: ${PUBLIC_DNS_NAME}
+      PUBLIC_PORT: ${EXTERNAL_LISTEN_PORT}
     restart: unless-stopped
     volumes:
       - "swarm-pgdata:/var/lib/postgresql/data"

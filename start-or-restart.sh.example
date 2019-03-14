@@ -18,7 +18,8 @@ export SWARM_PROD_HOST=some.host # TODO change me
 export SWARM_PROD_PORT=5432 # change me if needed
 export SWARM_PROD_DB=somedb # TODO change me
 
-# DNS that points to this service (only supports one value)
+# DNS that points to this service (only supports one value). HTTP Host header must equal this for server to route
+# correctly. Set to 'localhost' in dev.
 export PUBLIC_DNS_NAME=swarmapi.ausplots.aekos.org.au
 
 # Other secrets
