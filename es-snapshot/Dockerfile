@@ -1,4 +1,4 @@
-FROM alpine:3.7
+FROM alpine:3.8
 LABEL author="Tom Saleeba"
 LABEL description="curl running under cron for periodic snapshots of ElasticSearch"
 
@@ -8,5 +8,4 @@ ADD *.sh /
 RUN chmod +x /*.sh
 
 ENTRYPOINT ["/entrypoint.sh"]
-CMD [""]
 
