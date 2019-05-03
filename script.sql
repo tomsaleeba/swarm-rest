@@ -674,6 +674,93 @@ SELECT
 ;
 
 
+
+-- custom format for ross.searle@csiro.au
+DROP VIEW IF EXISTS api.ross;
+CREATE VIEW api.ross AS
+SELECT
+  sl.site_location_name,
+  slv.site_location_visit_id,
+  slp.latitude,
+  slp.longitude,
+  slv.visit_start_date AS "visit_date",
+  sc.upper_depth,
+  sc.lower_depth,
+  the_obs.op AS "observed_property",
+  the_obs.r AS "value"
+FROM public.site_location AS sl
+INNER JOIN public.site_location_visit AS slv
+  ON slv.site_location_id = sl.site_location_id
+  AND slv.site_location_visit_id NOT IN (
+    SELECT * FROM unpublished_site_location_visit_ids
+  )
+INNER JOIN public.site_location_point AS slp
+  ON slp.point = 'SW' -- need to pick a single point to get coordinates
+  AND slp.site_location_id = sl.site_location_id
+INNER JOIN soil_characterisation AS sc
+  ON sc.site_location_visit_id = slv.site_location_visit_id
+INNER JOIN (
+  -- first one sets up the column names
+  SELECT id, 'collected_by' AS op, collected_by::text AS r FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'colour_when_dry', colour_when_dry::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'colour_when_moist', colour_when_moist::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'ec', ec::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'effervescence', effervescence::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'horizon', horizon::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'layer_barcode', layer_barcode::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'mottles_abundance', mottles_abundance::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'mottles_colour', mottles_colour::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'mottles_size', mottles_size::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'next_size_1', next_size_1::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'next_size_2', next_size_2::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'next_size_type_1', next_size_type_1::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'next_size_type_2', next_size_type_2::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'pedality_fabric', pedality_fabric::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'pedality_grade', pedality_grade::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'ph', ph::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'segregations_abundance', segregations_abundance::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'segregations_form', segregations_form::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'segregations_nature', segregations_nature::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'segregations_size', segregations_size::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'smallest_size_1', smallest_size_1::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'smallest_size_2', smallest_size_2::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'smallest_size_type_1', smallest_size_type_1::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'smallest_size_type_2', smallest_size_type_2::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'texture_grade', texture_grade::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'texture_modifier', texture_modifier::text FROM soil_characterisation
+  UNION ALL
+  SELECT id, 'texture_qualifier', texture_qualifier::text FROM soil_characterisation
+) AS the_obs
+ON sc.id = the_obs.id;
+
+
+
 GRANT SELECT ON api.site_inc_unpub TO staff;
 GRANT SELECT ON api.structural_summary_inc_unpub TO staff;
 GRANT SELECT ON api.soil_bulk_density_inc_unpub TO staff;
@@ -701,5 +788,7 @@ GRANT SELECT ON api.om_site_point TO web_anon;
 GRANT SELECT ON api.om_procedure TO web_anon;
 GRANT SELECT ON api.om_observation TO web_anon;
 GRANT SELECT ON api.om_observation_collection TO web_anon;
+
+GRANT SELECT ON api.ross TO web_anon;
 
 SELECT 'success' AS outcome;
