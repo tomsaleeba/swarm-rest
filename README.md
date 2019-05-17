@@ -1,6 +1,7 @@
 > RESTful HTTP API to serve up Ausplots data from a postgres database using postgREST
 
-This directory contains the files required to run the HTTP REST API server that the [ausplotsR client](https://github.com/ternaustralia/ausplotsR) talks to.
+This directory contains the files required to run the HTTP REST API server that
+the [ausplotsR client](https://github.com/ternaustralia/ausplotsR) talks to.
 
 The DB init script (`script.sql`) does a number of things:
   1. create a schema just for the API, named `api`
@@ -25,8 +26,11 @@ Make sure you meet the requirements:
 
   1. docker >= 18.06
   1. docker-compose >= 1.22.0
-  1. credentials for perform SELECT queries on the production Ausplots SWARM postgres DB, or another DB if you choose. See section below for creating this user.
-  1. AWS credentials for IAM user to store ElasticSearch snapshots (use `./create-aws-s3-user-and-bucket.sh` script to create)
+  1. credentials for performing `SELECT` queries on the production Ausplots
+     SWARM postgres DB, or another DB if you choose. See section below for
+     creating this user.
+  1. AWS credentials for IAM user to store ElasticSearch snapshots (use
+     `./create-aws-s3-user-and-bucket.sh` script to create)
 
 To start the stack:
 
