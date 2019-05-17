@@ -46,6 +46,7 @@ services:
       - "./elk-post-hook.sh:/usr/local/bin/elk-post-hooks.sh"
   es_snapshot:
     build: ./es-snapshot
+    image: ternandsparrow/swarm-rest-es-snapshot:dev
     container_name: swarmrest_es_backup
     links:
       - elk:elk

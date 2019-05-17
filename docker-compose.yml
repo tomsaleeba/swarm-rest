@@ -52,7 +52,7 @@ services:
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
   db_sync:
-    image: ternandsparrow/pgsync:v0.3.6_1
+    image: ternandsparrow/pgsync:v0.3.6_2
     container_name: swarmrest_db_sync
     links:
       - db:db
