@@ -675,7 +675,7 @@ SELECT
 
 
 
--- custom format for ross.searle@csiro.au
+-- custom format for <ross dot searle at csiro dot au>
 DROP VIEW IF EXISTS api.ross;
 CREATE VIEW api.ross AS
 SELECT
