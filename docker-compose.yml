@@ -13,6 +13,11 @@ services:
     restart: unless-stopped
     depends_on:
       - db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+
   filter_proxy:
     image: ternandsparrow/nginx-filter-proxy:1.6.1
     container_name: swarmrest_filter_proxy
@@ -26,6 +31,11 @@ services:
     restart: unless-stopped
     depends_on:
       - server
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+
   db:
     image: postgres:10
     container_name: swarmrest_db
@@ -43,6 +53,11 @@ services:
     volumes:
       - "swarm-pgdata:/var/lib/postgresql/data"
       - "./postgres/add-readonly-user.sh:/docker-entrypoint-initdb.d/add-readonly-user.sh"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+
   autoheal: # thanks https://stackoverflow.com/a/48538213/1410035
     image: willfarrell/autoheal
     container_name: swarmrest_autoheal
@@ -51,6 +66,11 @@ services:
       - AUTOHEAL_CONTAINER_LABEL=all
     volumes:
       - /var/run/docker.sock:/var/run/docker.sock
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+
   db_sync:
     image: ternandsparrow/pgsync:v0.3.6_2
     container_name: swarmrest_db_sync
@@ -71,6 +91,11 @@ services:
     restart: unless-stopped
     depends_on:
       - db
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+
 volumes:
   swarm-pgdata:
 
