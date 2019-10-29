@@ -15,11 +15,21 @@ services:
     depends_on:
       - server
       - elk
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+
   filter_proxy:
     environment:
       TARGET_SERVER: 'stats_facade:80'
     depends_on:
       - stats_facade
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+
   elk:
     image: sebp/elk:642
     container_name: swarmrest_elk
@@ -44,6 +54,11 @@ services:
       - "elk-data:/var/lib/elasticsearch"
       - "./elk-pre-hook.sh:/usr/local/bin/elk-pre-hooks.sh"
       - "./elk-post-hook.sh:/usr/local/bin/elk-post-hooks.sh"
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+
   es_snapshot:
     build: ./es-snapshot
     image: ternandsparrow/swarm-rest-es-snapshot:dev
@@ -59,6 +74,11 @@ services:
     restart: unless-stopped
     depends_on:
       - elk
+    logging:
+      driver: "json-file"
+      options:
+        max-size: 100m
+
 volumes:
   elk-data:
 
