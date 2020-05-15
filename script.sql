@@ -84,6 +84,15 @@ CREATE FUNCTION observation_collection_id(VARIADIC id_fragment text[]) RETURNS t
 END $$ LANGUAGE PLPGSQL IMMUTABLE;
 
 
+-- sites have lots of points and we need to choose just one. Let's make sure we
+-- always choose the same one.
+DROP VIEW IF EXISTS api.singular_site_location_point;
+CREATE VIEW api.singular_site_location_point AS
+SELECT *
+FROM public.site_location_point
+WHERE point = 'SW'; -- need to pick a single point to get coordinates
+
+
 DROP VIEW IF EXISTS api.site_inc_unpub;
 CREATE VIEW api.site_inc_unpub AS
 SELECT
@@ -131,9 +140,8 @@ SELECT
 FROM public.site_location AS sl
 INNER JOIN public.site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
-INNER JOIN public.site_location_point AS slp
-  ON slp.point = 'SW' -- need to pick a single point to get coordinates
-  AND slp.site_location_id = sl.site_location_id;
+INNER JOIN api.singular_site_location_point AS slp
+  ON slp.site_location_id = sl.site_location_id;
 
 DROP VIEW IF EXISTS api.site;
 CREATE VIEW api.site AS
@@ -383,9 +391,8 @@ SELECT
 FROM public.site_location AS sl
 INNER JOIN public.site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
-INNER JOIN public.site_location_point AS slp
-  ON slp.point = 'SW' -- need to pick a single point to get coordinates
-  AND slp.site_location_id = sl.site_location_id
+INNER JOIN api.singular_site_location_point AS slp
+  ON slp.site_location_id = sl.site_location_id
 LEFT OUTER JOIN public.veg_vouchers AS vv
   ON vv.site_location_visit_id = slv.site_location_visit_id
 LEFT OUTER JOIN public.herbarium_determination AS hd
@@ -397,6 +404,8 @@ SELECT *
 FROM api.search_inc_unpub
 WHERE site_location_visit_id NOT IN (SELECT * FROM unpublished_site_location_visit_ids);
 
+
+-- O&M (observations and measurements) views
 
 DROP VIEW IF EXISTS api.om_site;
 CREATE VIEW api.om_site AS -- TODO make inc_unpub version
@@ -694,9 +703,8 @@ INNER JOIN public.site_location_visit AS slv
   AND slv.site_location_visit_id NOT IN (
     SELECT * FROM unpublished_site_location_visit_ids
   )
-INNER JOIN public.site_location_point AS slp
-  ON slp.point = 'SW' -- need to pick a single point to get coordinates
-  AND slp.site_location_id = sl.site_location_id
+INNER JOIN api.singular_site_location_point AS slp
+  ON slp.site_location_id = sl.site_location_id
 INNER JOIN soil_characterisation AS sc
   ON sc.site_location_visit_id = slv.site_location_visit_id
 INNER JOIN (
@@ -761,6 +769,64 @@ ON sc.id = the_obs.id;
 
 
 
+-- Soils2Satellites views
+DROP VIEW IF EXISTS api.s2s_study_location;
+CREATE VIEW api.s2s_study_location AS
+SELECT
+  sl.site_location_id AS "studyLocationId",
+  sl.site_location_name AS "studyLocationName",
+  slp.easting AS "easting",
+  slp.northing AS "northing",
+  slp.zone AS "mgaZone",
+  slp.latitude,
+  slp.longitude,
+  first_visits."firstVisit",
+  last_visits."lastVisit",
+  observers.json_observers AS "observers"
+FROM public.site_location AS sl
+INNER JOIN api.singular_site_location_point AS slp
+  ON slp.site_location_id = sl.site_location_id
+INNER JOIN (
+  SELECT
+    site_location_id,
+    json_agg(json_build_object(
+      'affiliation', lo.affiliation,
+      'observerName', lo.full_name
+    )) AS json_observers
+  FROM (
+    SELECT
+      site_location_id,
+      observer_soil AS observer_id
+    FROM public.site_location_visit
+    UNION
+    SELECT
+      site_location_id,
+      observer_veg
+    FROM public.site_location_visit
+  ) AS observer_ids
+  INNER JOIN public.lut_observer AS lo
+    ON lo.id = observer_ids.observer_id
+  GROUP BY 1
+) AS observers
+  ON observers.site_location_id = sl.site_location_id
+INNER JOIN (
+  SELECT
+    site_location_id,
+    min(date(visit_start_date)) AS "firstVisit"
+  FROM public.site_location_visit
+  GROUP BY 1
+) AS first_visits
+  ON first_visits.site_location_id = sl.site_location_id
+INNER JOIN (
+  SELECT
+    site_location_id,
+    max(date(visit_start_date)) AS "lastVisit"
+  FROM public.site_location_visit
+  GROUP BY 1
+) AS last_visits
+  ON last_visits.site_location_id = sl.site_location_id;
+
+
 GRANT SELECT ON api.site_inc_unpub TO staff;
 GRANT SELECT ON api.structural_summary_inc_unpub TO staff;
 GRANT SELECT ON api.soil_bulk_density_inc_unpub TO staff;
@@ -790,5 +856,7 @@ GRANT SELECT ON api.om_observation TO web_anon;
 GRANT SELECT ON api.om_observation_collection TO web_anon;
 
 GRANT SELECT ON api.ross TO web_anon;
+
+GRANT SELECT ON api.s2s_study_location TO web_anon;
 
 SELECT 'success' AS outcome;

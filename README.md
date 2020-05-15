@@ -221,6 +221,23 @@ You can connect to the DB as the superuser if you SSH to the docker host, then r
 docker exec -it swarmrest_db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB'
 ```
 
+## DB dump/restore
+In normal operation, you won't have to do this because we are just a mirror for
+the source of truth and don't create any new data. But for development, it's
+nice to be able to work with DB dumps.
+
+To create a backup/dump:
+```bash
+docker exec -i swarmrest_db sh -c 'pg_dump -v -Fc --exclude-schema=api -U $POSTGRES_USER -d $POSTGRES_DB' > swarmrest.backup
+```
+
+To restore a backup/dump:
+```bash
+docker exec -it swarmrest_db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB -c "DROP SCHEMA IF EXISTS api CASCADE;"'
+cat swarmrest.backup | docker exec -i swarmrest_db sh -c 'pg_restore -v -U $POSTGRES_USER -d $POSTGRES_DB --clean --if-exists'
+# now you need to run the script.sql again
+```
+
 ## Known problems
   1. Kibana has no auth so we can't open it to the public yet
   1. sometimes ES dies inside the ELK stack but Docker can't see it. We're using a health check and the
