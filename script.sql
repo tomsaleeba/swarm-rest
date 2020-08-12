@@ -298,6 +298,12 @@ SELECT
   vv.veg_barcode,
   hd.herbarium_determination,
   hd.is_uncertain_determination,
+  wfod.tax_family,
+  wfod.tax_genus,
+  wfod.tax_infraspecific_epithet,
+  wfod.tax_infraspecific_rank,
+  wfod.tax_specific_epithet,
+  wfod.tax_status,
   slv.visit_start_date,
   slv.site_location_visit_id,
   gv.primary_gen_barcode,
@@ -314,6 +320,9 @@ LEFT OUTER JOIN public.herbarium_determination AS hd
   ON hd.veg_barcode = vv.veg_barcode
 LEFT OUTER JOIN public.genetic_vouchers AS gv
   ON gv.veg_barcode = vv.veg_barcode;
+LEFT OUTER JOIN wfo_determination AS wfod 
+  ON wfod.veg_barcode = pi.veg_barcode;
+
 
 DROP VIEW IF EXISTS api.veg_voucher;
 CREATE VIEW api.veg_voucher AS
@@ -336,7 +345,13 @@ SELECT
   pi.in_canopy_sky,
   pi.dead,
   pi.growth_form,
-  pi.height
+  pi.height,
+  wfod.tax_family,
+  wfod.tax_genus,
+  wfod.tax_infraspecific_epithet,
+  wfod.tax_infraspecific_rank,
+  wfod.tax_specific_epithet,
+  wfod.tax_status
 FROM public.site_location AS sl
 INNER JOIN public.site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
@@ -344,6 +359,13 @@ INNER JOIN public.point_intercept AS pi
   ON pi.site_location_visit_id = slv.site_location_visit_id
 LEFT OUTER JOIN public.herbarium_determination AS hd
   ON hd.veg_barcode = pi.veg_barcode;
+LEFT OUTER JOIN public.herbarium_determination AS hd
+  ON hd.veg_barcode = pi.veg_barcode
+LEFT OUTER JOIN wfo_determination AS wfod 
+  ON wfod.veg_barcode = pi.veg_barcode;
+
+
+
 
 DROP VIEW IF EXISTS api.veg_pi;
 CREATE VIEW api.veg_pi AS
@@ -361,6 +383,12 @@ SELECT
   sl.site_location_id,
   ba.point_id,
   hd.herbarium_determination,
+  wfod.tax_family,
+  wfod.tax_genus,
+  wfod.tax_infraspecific_epithet,
+  wfod.tax_infraspecific_rank,
+  wfod.tax_specific_epithet,
+  wfod.tax_status,
   hd.veg_barcode,
   ba.hits,
   ba.basal_area_factor,
@@ -371,7 +399,9 @@ INNER JOIN public.site_location_visit AS slv
 INNER JOIN public.basal_area AS ba
   ON ba.site_location_visit_id = slv.site_location_visit_id
 INNER JOIN public.herbarium_determination AS hd
-  ON hd.veg_barcode = ba.veg_barcode;
+  ON hd.veg_barcode = ba.veg_barcode
+LEFT OUTER JOIN wfo_determination AS wfod 
+  ON wfod.veg_barcode = pi.veg_barcode;
 
 DROP VIEW IF EXISTS api.veg_basal;
 CREATE VIEW api.veg_basal AS
@@ -387,7 +417,13 @@ SELECT
   slv.site_location_visit_id,
   slp.latitude,
   slp.longitude,
-  hd.herbarium_determination
+  hd.herbarium_determination,
+  wfod.tax_family,
+  wfod.tax_genus,
+  wfod.tax_infraspecific_epithet,
+  wfod.tax_infraspecific_rank,
+  wfod.tax_specific_epithet,
+  wfod.tax_status
 FROM public.site_location AS sl
 INNER JOIN public.site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
@@ -396,7 +432,9 @@ INNER JOIN api.singular_site_location_point AS slp
 LEFT OUTER JOIN public.veg_vouchers AS vv
   ON vv.site_location_visit_id = slv.site_location_visit_id
 LEFT OUTER JOIN public.herbarium_determination AS hd
-  ON hd.veg_barcode = vv.veg_barcode;
+  ON hd.veg_barcode = vv.veg_barcode
+LEFT OUTER JOIN wfo_determination AS wfod 
+  ON wfod.veg_barcode = pi.veg_barcode;
 
 DROP VIEW IF EXISTS api.search;
 CREATE VIEW api.search AS
