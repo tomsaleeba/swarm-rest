@@ -124,11 +124,12 @@ For example, you could pass a URL like
 ```
 
 ## Modifying our copy of the schema
-In the set up steps, we first sync the schema, then sync the data then run our script to create the bits we
-need. Future data syncs won't touch the schema, which means our script can make changes -- like adding row
-level security or granting access -- to our copy of the schema. If you ever do another sync of the schema, you
-*must* re-run the script. If it re-running doesn't work for any reason, you can recover by killing the PG
-container and starting again:
+In the set up steps, we first sync the schema, then sync the data then run our
+script to create the bits we need. Future data syncs won't touch the schema,
+which means our script can make changes -- like adding row level security or
+granting access -- to our copy of the schema. If you ever do another sync of the
+schema, you *must* re-run the script. If re-running it doesn't work for any
+reason, you can recover by killing the PG container and starting again:
 
   1. stop the stack
       ```bash
@@ -148,7 +149,8 @@ stack, but **keep the data** with:
 docker-compose down
 ```
 
-If you want to completely clean up and have the **data volumes also removed**, you can do this with:
+If you want to completely clean up and have the **data volumes also removed**,
+you can do this with:
 ```bash
 docker-compose down --volumes
 ```
@@ -161,6 +163,21 @@ CREATE ROLE syncuser PASSWORD 'somegoodpassword';
 GRANT SELECT ON ALL TABLES IN SCHEMA public TO syncuser;
 GRANT SELECT ON ALL SEQUENCES IN SCHEMA public TO syncuser;
 ```
+
+## Creating new tables in the source DB
+If you see an error during the `pgsync` run that looks like:
+```
+Table does not exist in source: <some table>
+```
+...then it's probably a permissions thing. You can check by connecting to the
+source DB using the credentials that this stack uses, and trying to select from
+the table (assume the table is called `table_abc`):
+```sql
+SELECT * FROM table_abc;
+ERROR:  permission denied for relation table_abc
+```
+This error is much clearer. To fix it, you need to connect to the source DB as
+an admin and re-run the `GRANT` commands above.
 
 ## Restoring ElasticSearch snapshots
 
