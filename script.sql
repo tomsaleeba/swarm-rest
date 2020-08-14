@@ -319,10 +319,9 @@ INNER JOIN public.veg_vouchers AS vv
 LEFT OUTER JOIN public.herbarium_determination AS hd
   ON hd.veg_barcode = vv.veg_barcode
 LEFT OUTER JOIN public.genetic_vouchers AS gv
-  ON gv.veg_barcode = vv.veg_barcode;
-LEFT OUTER JOIN wfo_determination AS wfod 
-  ON wfod.veg_barcode = pi.veg_barcode;
-
+  ON gv.veg_barcode = vv.veg_barcode
+LEFT OUTER JOIN wfo_determination AS wfod
+  ON wfod.veg_barcode = vv.veg_barcode;
 
 DROP VIEW IF EXISTS api.veg_voucher;
 CREATE VIEW api.veg_voucher AS
@@ -358,14 +357,9 @@ INNER JOIN public.site_location_visit AS slv
 INNER JOIN public.point_intercept AS pi
   ON pi.site_location_visit_id = slv.site_location_visit_id
 LEFT OUTER JOIN public.herbarium_determination AS hd
-  ON hd.veg_barcode = pi.veg_barcode;
-LEFT OUTER JOIN public.herbarium_determination AS hd
   ON hd.veg_barcode = pi.veg_barcode
-LEFT OUTER JOIN wfo_determination AS wfod 
-  ON wfod.veg_barcode = pi.veg_barcode;
-
-
-
+LEFT OUTER JOIN wfo_determination AS wfod
+  ON wfod.veg_barcode = hd.veg_barcode;
 
 DROP VIEW IF EXISTS api.veg_pi;
 CREATE VIEW api.veg_pi AS
@@ -400,14 +394,15 @@ INNER JOIN public.basal_area AS ba
   ON ba.site_location_visit_id = slv.site_location_visit_id
 INNER JOIN public.herbarium_determination AS hd
   ON hd.veg_barcode = ba.veg_barcode
-LEFT OUTER JOIN wfo_determination AS wfod 
-  ON wfod.veg_barcode = pi.veg_barcode;
+LEFT OUTER JOIN wfo_determination AS wfod
+  ON wfod.veg_barcode = hd.veg_barcode;
 
 DROP VIEW IF EXISTS api.veg_basal;
 CREATE VIEW api.veg_basal AS
 SELECT *
 FROM api.veg_basal_inc_unpub
 WHERE site_location_visit_id NOT IN (SELECT * FROM unpublished_site_location_visit_ids);
+
 
 
 DROP VIEW IF EXISTS api.search_inc_unpub;
@@ -433,8 +428,8 @@ LEFT OUTER JOIN public.veg_vouchers AS vv
   ON vv.site_location_visit_id = slv.site_location_visit_id
 LEFT OUTER JOIN public.herbarium_determination AS hd
   ON hd.veg_barcode = vv.veg_barcode
-LEFT OUTER JOIN wfo_determination AS wfod 
-  ON wfod.veg_barcode = pi.veg_barcode;
+LEFT OUTER JOIN wfo_determination AS wfod
+  ON wfod.veg_barcode = hd.veg_barcode;
 
 DROP VIEW IF EXISTS api.search;
 CREATE VIEW api.search AS
