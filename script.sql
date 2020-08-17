@@ -93,6 +93,28 @@ FROM public.site_location_point
 WHERE point = 'SW'; -- need to pick a single point to get coordinates
 
 
+DROP VIEW IF EXISTS api.wfo_determination_pretty;
+CREATE VIEW api.wfo_determination_pretty AS
+SELECT
+  wfod.veg_barcode,
+  NULLIF(trim(regexp_replace(
+    coalesce(wfod.tax_genus, '') || ' ' ||
+    coalesce(wfod.tax_specific_epithet, '') || ' ' ||
+    coalesce(wfod.tax_infraspecific_rank, '') || ' ' ||
+    coalesce(wfod.tax_infraspecific_epithet, ''),
+    E'\\s+', ' ', 'g'
+  )), '') AS standardised_name,
+  wfod.tax_family AS family,
+  wfod.tax_genus AS genus,
+  wfod.tax_specific_epithet AS specific_epithet,
+  wfod.tax_infraspecific_rank AS infraspecific_rank,
+  wfod.tax_infraspecific_epithet AS infraspecific_epithet,
+  wfod.tax_status AS taxa_status,
+  -- if genus or species is null, we *want* the genus_species field to be null
+  wfod.tax_genus || ' ' || wfod.tax_specific_epithet AS genus_species
+FROM public.wfo_determination AS wfod;
+
+
 DROP VIEW IF EXISTS api.site_inc_unpub;
 CREATE VIEW api.site_inc_unpub AS
 SELECT
@@ -295,17 +317,9 @@ DROP VIEW IF EXISTS api.veg_voucher_inc_unpub;
 CREATE VIEW api.veg_voucher_inc_unpub AS
 SELECT
   sl.site_location_name,
-  vv.veg_barcode,
   hd.herbarium_determination,
   hd.is_uncertain_determination,
-  wfod.tax_family,
-  wfod.tax_genus,
-  wfod.tax_specific_epithet,
-  wfod.tax_infraspecific_rank,
-  wfod.tax_infraspecific_epithet,
-  wfod.tax_status,
-  -- if genus or species is null, we *want* the whole field to be null
-  wfod.tax_genus || ' ' || wfod.tax_specific_epithet AS genus_species,
+  wfod_pretty.*,
   slv.visit_start_date,
   slv.site_location_visit_id,
   gv.primary_gen_barcode,
@@ -322,8 +336,8 @@ LEFT OUTER JOIN public.herbarium_determination AS hd
   ON hd.veg_barcode = vv.veg_barcode
 LEFT OUTER JOIN public.genetic_vouchers AS gv
   ON gv.veg_barcode = vv.veg_barcode
-LEFT OUTER JOIN wfo_determination AS wfod
-  ON wfod.veg_barcode = vv.veg_barcode;
+LEFT OUTER JOIN wfo_determination_pretty AS wfod_pretty
+  ON wfod_pretty.veg_barcode = vv.veg_barcode;
 
 DROP VIEW IF EXISTS api.veg_voucher;
 CREATE VIEW api.veg_voucher AS
@@ -340,21 +354,13 @@ SELECT
   slv.site_location_visit_id,
   pi.transect,
   pi.point_number,
-  hd.veg_barcode,
   hd.herbarium_determination,
   pi.substrate,
   pi.in_canopy_sky,
   pi.dead,
   pi.growth_form,
   pi.height,
-  wfod.tax_family,
-  wfod.tax_genus,
-  wfod.tax_specific_epithet,
-  wfod.tax_infraspecific_rank,
-  wfod.tax_infraspecific_epithet,
-  wfod.tax_status,
-  -- if genus or species is null, we *want* the whole field to be null
-  wfod.tax_genus || ' ' || wfod.tax_specific_epithet AS genus_species
+  wfod_pretty.*
 FROM public.site_location AS sl
 INNER JOIN public.site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
@@ -362,8 +368,8 @@ INNER JOIN public.point_intercept AS pi
   ON pi.site_location_visit_id = slv.site_location_visit_id
 LEFT OUTER JOIN public.herbarium_determination AS hd
   ON hd.veg_barcode = pi.veg_barcode
-LEFT OUTER JOIN wfo_determination AS wfod
-  ON wfod.veg_barcode = hd.veg_barcode;
+LEFT OUTER JOIN wfo_determination_pretty AS wfod_pretty
+  ON wfod_pretty.veg_barcode = hd.veg_barcode;
 
 DROP VIEW IF EXISTS api.veg_pi;
 CREATE VIEW api.veg_pi AS
