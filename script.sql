@@ -300,9 +300,9 @@ SELECT
   hd.is_uncertain_determination,
   wfod.tax_family,
   wfod.tax_genus,
-  wfod.tax_infraspecific_epithet,
-  wfod.tax_infraspecific_rank,
   wfod.tax_specific_epithet,
+  wfod.tax_infraspecific_rank,
+  wfod.tax_infraspecific_epithet,
   wfod.tax_status,
   -- if genus or species is null, we *want* the whole field to be null
   wfod.tax_genus || ' ' || wfod.tax_specific_epithet AS genus_species,
@@ -349,9 +349,9 @@ SELECT
   pi.height,
   wfod.tax_family,
   wfod.tax_genus,
-  wfod.tax_infraspecific_epithet,
-  wfod.tax_infraspecific_rank,
   wfod.tax_specific_epithet,
+  wfod.tax_infraspecific_rank,
+  wfod.tax_infraspecific_epithet,
   wfod.tax_status,
   -- if genus or species is null, we *want* the whole field to be null
   wfod.tax_genus || ' ' || wfod.tax_specific_epithet AS genus_species
