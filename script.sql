@@ -304,6 +304,8 @@ SELECT
   wfod.tax_infraspecific_rank,
   wfod.tax_specific_epithet,
   wfod.tax_status,
+  -- if genus or species is null, we *want* the whole field to be null
+  wfod.tax_genus || ' ' || wfod.tax_specific_epithet AS genus_species,
   slv.visit_start_date,
   slv.site_location_visit_id,
   gv.primary_gen_barcode,
@@ -350,7 +352,9 @@ SELECT
   wfod.tax_infraspecific_epithet,
   wfod.tax_infraspecific_rank,
   wfod.tax_specific_epithet,
-  wfod.tax_status
+  wfod.tax_status,
+  -- if genus or species is null, we *want* the whole field to be null
+  wfod.tax_genus || ' ' || wfod.tax_specific_epithet AS genus_species
 FROM public.site_location AS sl
 INNER JOIN public.site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
