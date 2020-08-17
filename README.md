@@ -74,16 +74,16 @@ To start the stack:
       ```
   1. trigger a schema-only sync (should take less than a minute)
       ```bash
-      docker exec -i swarmrest_db_sync sh -c 'SCHEMA_ONLY=1 sh /app/run.sh'
+      ./helper-scripts/schema-only-sync.sh
       ```
   1. trigger a data sync to get us up and running (should take around a minute)
       ```bash
-      docker exec -i swarmrest_db_sync sh -c 'sh /app/run.sh'
+      ./helper-scripts/data-only-sync.sh
       ```
   1. connect as a superuser and run the `./script.sql` file to create all required objects for the API to run.
      See section 'Modifying our copy of the schema' for more discussion about re-running.
       ```bash
-      cat script.sql | docker exec -i swarmrest_db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB --set=ON_ERROR_STOP=1'
+      ./helper-scripts/recreate-api-views.sh
       ```
   1. look for the success output at the end of the script:
       ```
@@ -218,7 +218,7 @@ need to run these command on the docker host to have access (or through an SSH t
 ## Connect to DB with psql
 You can connect to the DB as the superuser if you SSH to the docker host, then run:
 ```bash
-docker exec -it swarmrest_db sh -c 'psql -U $POSTGRES_USER -d $POSTGRES_DB'
+./helper-scripts/psql.sh
 ```
 
 ## DB dump/restore
