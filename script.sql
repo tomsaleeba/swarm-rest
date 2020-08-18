@@ -97,21 +97,27 @@ DROP VIEW IF EXISTS api.wfo_determination_pretty;
 CREATE VIEW api.wfo_determination_pretty AS
 SELECT
   wfod.veg_barcode,
-  NULLIF(trim(regexp_replace(
-    coalesce(wfod.tax_genus, '') || ' ' ||
-    coalesce(wfod.tax_specific_epithet, '') || ' ' ||
-    coalesce(wfod.tax_infraspecific_rank, '') || ' ' ||
-    coalesce(wfod.tax_infraspecific_epithet, ''),
-    E'\\s+', ' ', 'g'
-  )), '') AS standardised_name,
-  wfod.tax_family AS family,
-  wfod.tax_genus AS genus,
-  wfod.tax_specific_epithet AS specific_epithet,
-  wfod.tax_infraspecific_rank AS infraspecific_rank,
-  wfod.tax_infraspecific_epithet AS infraspecific_epithet,
-  wfod.tax_status AS taxa_status,
-  -- if genus or species is null, we *want* the genus_species field to be null
-  wfod.tax_genus || ' ' || wfod.tax_specific_epithet AS genus_species
+  NULLIF(
+    trim(
+      regexp_replace(
+          coalesce(wfod.tax_genus, '') || ' ' ||
+          coalesce(wfod.tax_specific_epithet, '') || ' ' ||
+          coalesce(wfod.tax_infraspecific_rank, '') || ' ' ||
+          coalesce(wfod.tax_infraspecific_epithet, ''),
+        E'\\s+',
+        ' ',
+        'g'
+      )
+    ), ''
+  ) AS standardised_name,
+  NULLIF(wfod.tax_family, '') AS family,
+  NULLIF(wfod.tax_genus, '') AS genus,
+  NULLIF(wfod.tax_specific_epithet, '') AS specific_epithet,
+  NULLIF(wfod.tax_infraspecific_rank, '') AS infraspecific_rank,
+  NULLIF(wfod.tax_infraspecific_epithet, '') AS infraspecific_epithet,
+  NULLIF(wfod.tax_status, '') AS taxa_status,
+  NULLIF(trim(wfod.tax_genus || ' '
+      || wfod.tax_specific_epithet), '') AS genus_species
 FROM public.wfo_determination AS wfod;
 
 
