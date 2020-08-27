@@ -227,10 +227,10 @@ need to run these command on the docker host to have access (or through an SSH t
      create a fresh one to start from a clean slate:
       ```bash
       docker rm -f swarmrest_elk
-      docker volume rm swarmrest_elk-data
+      docker volume rm swarm-rest_elk-data
       ./start-or-restart.sh
       docker logs --tail 10 -f swarmrest_elk # watch the logs until Kibana has started up
-      # <control-> to stop tailing logs...
+      # <control-c> to stop tailing logs...
       # ...then try the restore again
       ```
 
