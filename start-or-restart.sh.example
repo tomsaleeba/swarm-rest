@@ -23,6 +23,11 @@ export SWARM_PROD_DB=somedb # TODO change me
 export PUBLIC_DNS_NAME=swarmapi.ausplots.aekos.org.au
 
 # Other secrets
+
+# Read more about this setting in the doco:
+# https://postgrest.org/en/stable/configuration.html?highlight=jwt#jwt-secret.
+# It is the value that clients auth-ing via JWT will need to provide, e.g.
+# https://github.com/ternaustralia/ausplotsR/blob/master/DEVELOPERS.md#accessing-unpublished-data.
 export PGRST_JWT_SECRET=reallyreallyreallyreallyverysafe # TODO change me, must be at least 32 chars long
 
 # if you run this in a non-prod environment, you can (should!) disable ES snapshots with:
