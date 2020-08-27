@@ -98,7 +98,9 @@ To start the stack:
       curl -v '<hostname:port>/site?limit=1'
       # the response should be a JSON array of objects, e.g. [{"site_location_name":"...
       ```
-  1. check the Kibana dashboard for metrics at http://<hostname>:5601 (port can be changed in `.env`)
+  1. The Kibana dashboard is *NOT* open to the public by default, but assuming
+     you have a way to connect to it, it's running on port 5601. This port can
+     be changed in `.env`.
 
 Warning: the Kibana (ELK stack) instance has no security/auth so don't expose it to the internet. Or if you
 do, add some security. A nice way to connect to the Kibana dashboard on a VM without opening the firewall is
