@@ -32,7 +32,7 @@ class TestUM(unittest.TestCase):
     def test_site_02(self):
         '''Is the endpoint with unpublished data protected?'''
         resp = requests.get(build_url('site_inc_unpub'))
-        self.assertEquals(resp.status_code, 401)
+        self.assertEqual(resp.status_code, 401)
 
     def test_structural_summary_01(self):
         '''Is the /structural_summary endpoint returning the expected number of fields?'''
