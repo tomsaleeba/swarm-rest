@@ -181,6 +181,17 @@ ERROR:  permission denied for relation table_abc
 This error is much clearer. To fix it, you need to connect to the source DB as
 an admin and re-run the `GRANT` commands above.
 
+## Manually triggering ElasticSearch snapshot
+The snapshots happen regularly on a cron schedule but if you need to manually
+trigger one by hand, you do so by running the script on the docker host:
+
+```bash
+./helper-scripts/trigger-es-s3-snapshot.sh
+```
+
+We rely on the ElasticSearch "S3 Repository Plugin" to give us the ability to
+interact with AWS S3 for out snapshots.
+
 ## Restoring ElasticSearch snapshots
 
 The name of the snapshot repo is defined in the `.env` file as `ES_SNAPSHOT_REPO`. For this example, let's
@@ -233,6 +244,17 @@ need to run these command on the docker host to have access (or through an SSH t
       # <control-c> to stop tailing logs...
       # ...then try the restore again
       ```
+
+## Deleting old ElasticSearch snapshots
+The high level approach is to list all the available snapshots, filter the list
+down to the "old" ones, then delete all those snapshots by `curl`ing a DELETE
+to a certain endpoint.
+
+Run the script we have to help you with this:
+```bash
+./helper-scripts/delete-old-es-s3-snapshots.sh 2018
+./helper-scripts/delete-old-es-s3-snapshots.sh 2019
+```
 
 ## Connect to DB with psql
 You can connect to the DB as the superuser if you SSH to the docker host, then run:
