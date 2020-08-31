@@ -24,9 +24,16 @@ echo "[INFO] Getting list of snapshots"
 curl "http://$host/_snapshot/$repoName/_all" > $snapshotListingFile
 
 echo "[INFO] Filtering for list of snapshots to delete using: $yearToFilterFor"
+set +e
 jq -r '.snapshots | .[].snapshot' $snapshotListingFile \
   | grep "\.$yearToFilterFor" \
   > $yearFilterFile
+RC=$?
+[ $RC != 0 ] && {
+  echo "[WARN] no snapshots found for $yearToFilterFor, exiting"
+  exit 0
+}
+set -e
 
 foundCount=$(wc -l $yearFilterFile | cut -f 1 -d ' ')
 echo "[INFO] Found a total of $foundCount snapshots to delete, here's a sample"
