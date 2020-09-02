@@ -27,7 +27,7 @@ services:
     environment:
       TARGET_SERVER: 'server:3000'
       DNS_NAME: ${PUBLIC_DNS_NAME}
-      # NO_CACHE: 1 # use this to disable HTTP caching
+      NO_CACHE: ${IS_DISABLE_HTTP_CACHE}
     restart: unless-stopped
     depends_on:
       - server

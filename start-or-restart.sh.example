@@ -30,6 +30,10 @@ export PUBLIC_DNS_NAME=swarmapi.ausplots.aekos.org.au
 # https://github.com/ternaustralia/ausplotsR/blob/master/DEVELOPERS.md#accessing-unpublished-data.
 export PGRST_JWT_SECRET=reallyreallyreallyreallyverysafe # TODO change me, must be at least 32 chars long
 
+# uncomment this line to disable HTTP response caching. During dev you'll want
+# to turn this on.
+# export IS_DISABLE_HTTP_CACHE=1
+
 # if you run this in a non-prod environment, you can (should!) disable ES snapshots with:
 #export ES_SNAPSHOT_CRON_SCHEDULE='0 0 31 2 *' # feb 31, i.e. never, thanks https://stackoverflow.com/a/13938099/1410035
 
