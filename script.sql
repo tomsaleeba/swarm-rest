@@ -93,6 +93,7 @@ FROM public.site_location_point
 WHERE point = 'SW'; -- need to pick a single point to get coordinates
 
 
+-- WFO = http://www.worldfloraonline.org/
 DROP VIEW IF EXISTS api.wfo_determination_pretty;
 CREATE VIEW api.wfo_determination_pretty AS
 SELECT
@@ -441,6 +442,298 @@ CREATE VIEW api.search AS
 SELECT *
 FROM api.search_inc_unpub
 WHERE site_location_visit_id NOT IN (SELECT * FROM unpublished_site_location_visit_ids);
+
+
+
+DROP VIEW IF EXISTS api.metadata_dictionary;
+CREATE VIEW api.metadata_dictionary AS
+SELECT
+  'basal_point' AS variable, -- FIXME is this really "basal", and do we need it?
+  point_id AS code,
+  point_name AS label,
+  'Distance from SW corner: ' || distance_from_sw_corner AS description
+FROM public.lut_basal_point
+UNION ALL
+SELECT
+  'bioregion_name' AS variable,
+  abbreviation AS code,
+  name AS label,
+  NULL AS description
+FROM public.lut_bioregions
+UNION ALL
+SELECT -- FIXME do we need this?
+  'coarse_frag_abund' AS variable,
+  id AS code,
+  "type" AS label,
+  NULL AS description
+FROM public.lut_coarse_frag_abund
+UNION ALL
+SELECT -- FIXME do we need this?
+  'coarse_frag_shape' AS variable,
+  id AS code,
+  "type" AS label,
+  NULL AS description
+FROM public.lut_coarse_frag_shape
+UNION ALL
+SELECT -- FIXME do we need this?
+  'coarse_frag_size' AS variable,
+  id AS code,
+  "size" AS label,
+  NULL AS description
+FROM public.lut_coarse_frag_size
+UNION ALL
+SELECT
+  'pit_marker_datum' AS variable,
+  datum AS code,
+  description AS label,
+  description_geoscience_australia AS description
+FROM public.lut_datum
+UNION ALL
+SELECT
+  'disturbance' AS variable,
+  id AS code,
+  disturbance AS label,
+  NULL AS description
+FROM public.lut_disturbance
+UNION ALL
+SELECT
+  'drainage_type' AS variable,
+  id::VARCHAR AS code,
+  drainage AS label,
+  description
+FROM public.lut_drainage
+UNION ALL
+SELECT
+  'effervescence' AS variable,
+  id AS code,
+  effervescence AS label,
+  NULL AS description
+FROM public.lut_effervescence
+UNION ALL
+SELECT
+  'erosion_abundance' AS variable,
+  id AS code,
+  abundance AS label,
+  NULL AS description
+FROM public.lut_erosion_abund
+UNION ALL
+SELECT
+  'erosion_state' AS variable,
+  id AS code,
+  state AS label,
+  NULL AS description
+FROM public.lut_erosion_state
+UNION ALL
+SELECT
+  'erosion_type' AS variable,
+  id AS code,
+  erosion_type AS label,
+  NULL AS description
+FROM public.lut_erosion_type
+UNION ALL
+SELECT
+  'growth_form' AS variable,
+  id AS code,
+  growth_form AS label,
+  definition AS description
+FROM public.lut_growth_form
+UNION ALL
+SELECT -- FIXME do we need this?
+  'ibra' AS variable,
+  bioregion_name AS code,
+  bioregion_description AS label,
+  NULL AS description
+FROM public.lut_ibra
+UNION ALL
+SELECT
+  'landform_element' AS variable,
+  code,
+  landform_element AS label,
+  description
+FROM public.lut_landform_element
+UNION ALL
+SELECT
+  'landform_pattern' AS variable,
+  id AS code,
+  landform_pattern AS label,
+  description
+FROM public.lut_landform_pattern
+UNION ALL
+SELECT
+  'outcrop_lithology' AS variable,
+  code,
+  outcrop_lithology AS label,
+  'Rock type: ' || rock_type AS description
+FROM public.lut_lithology
+-- FIXME also add other_outcrop_lithology?
+UNION ALL
+SELECT
+  'pit_marker_location_method' AS variable,
+  location_tech_type AS code,
+  description AS label,
+  NULL AS description
+FROM public.lut_location_method
+UNION ALL
+SELECT
+  'pit_marker_mga_zones' AS variable,
+  mga_zone::VARCHAR AS code,
+  'Zone ' || mga_zone AS label,
+  'Datum: ' || datum
+    || ', Projection: ' || projection
+    || ', Boundary: ' || eastern_boundary || ' to ' || western_boundary
+    AS description
+FROM public.lut_mga_zone
+UNION ALL
+SELECT
+  'microrelief' AS variable,
+  id AS code,
+  "type" AS label,
+  description
+FROM public.lut_microrelief
+UNION ALL
+SELECT
+  'mottles_abundance' AS variable,
+  id AS code,
+  abundance AS label,
+  NULL AS description
+FROM public.lut_mottle_abund
+UNION ALL
+SELECT
+  'mottles_colour' AS variable,
+  id AS code,
+  colour AS label,
+  NULL AS description
+FROM public.lut_mottle_colour
+UNION ALL
+SELECT
+  'mottles_size' AS variable,
+  id AS code,
+  size AS label,
+  NULL AS description
+FROM public.lut_mottle_size
+UNION ALL
+SELECT
+  'observer_veg' AS variable,
+  id::VARCHAR AS code,
+  full_name AS label,
+  'Affiliation: ' || affiliation AS description
+FROM public.lut_observer
+-- FIXME also need observer_soil?
+-- FIXME also need described_by?
+UNION ALL
+SELECT
+  'pedality_fabric' AS variable,
+  id::VARCHAR AS code,
+  pedality_fabric AS label,
+  description
+FROM public.lut_pedality_fabric
+UNION ALL
+SELECT
+  'pedality_grade' AS variable,
+  id::VARCHAR AS code,
+  grade AS label,
+  'Pedality: ' || pedality || '. ' || description AS description
+FROM public.lut_pedality_grade
+UNION ALL
+SELECT
+  'pedality_type' AS variable,
+  id::VARCHAR AS code,
+  pedality_type AS label,
+  description
+FROM public.lut_pedality_type
+UNION ALL
+SELECT
+  'segregations_abundance' AS variable,
+  id AS code,
+  abundance AS label,
+  NULL AS description
+FROM public.lut_seg_abundance
+UNION ALL
+SELECT
+  'segregations_form' AS variable,
+  id AS code,
+  form AS label,
+  NULL AS description
+FROM public.lut_seg_form
+UNION ALL
+SELECT
+  'segregations_nature' AS variable,
+  id AS code,
+  nature AS label,
+  NULL AS description
+FROM public.lut_seg_nature
+UNION ALL
+SELECT
+  'segregations_size' AS variable,
+  id AS code,
+  "size" AS label,
+  NULL AS description
+FROM public.lut_seg_size
+UNION ALL
+SELECT
+  'soil_observation_type' AS variable,
+  id AS code,
+  "type" AS label,
+  description
+FROM public.lut_soil_obs_type
+UNION ALL
+SELECT
+  'texture_grade' AS variable,
+  code,
+  name AS label,
+  bolus_description || '. Clay content: ' || clay_content AS description
+FROM public.lut_soil_tex_grade
+UNION ALL
+SELECT
+  'texture_modifier' AS variable,
+  id AS code,
+  modifier AS label,
+  NULL AS description
+FROM public.lut_soil_tex_mod
+UNION ALL
+SELECT
+  'texture_qualifier' AS variable,
+  id AS code,
+  qualification AS label,
+  NULL AS description
+FROM public.lut_soil_tex_qual
+UNION ALL
+SELECT
+  'state' AS variable,
+  state AS code,
+  description AS label,
+  NULL AS description
+FROM public.lut_state
+UNION ALL
+SELECT
+  'smallest_size_1' AS variable,
+  id AS code,
+  "size" AS label,
+  NULL AS description
+FROM public.lut_structure_size
+-- FIXME do we need smallest_size_2 too?
+UNION ALL
+SELECT
+  'substrate' AS variable,
+  substrate AS code,
+  substrate AS label,
+  description
+FROM public.lut_substrate
+UNION ALL
+SELECT -- FIXME do we need this?
+  'surface_soil_condition' AS variable,
+  id AS code,
+  condition AS label,
+  NULL AS description
+FROM public.lut_surface_soil_cond
+UNION ALL
+SELECT -- FIXME do we need this?
+  'surface_strew_size' AS variable,
+  id::VARCHAR AS code,
+  "size" AS label,
+  NULL AS description
+FROM public.lut_surface_strew_size
+;
 
 
 -- O&M (observations and measurements) views
@@ -884,6 +1177,7 @@ GRANT SELECT ON api.veg_voucher TO web_anon;
 GRANT SELECT ON api.veg_pi TO web_anon;
 GRANT SELECT ON api.veg_basal TO web_anon;
 GRANT SELECT ON api.search TO web_anon;
+GRANT SELECT ON api.metadata_dictionary TO web_anon;
 
 GRANT SELECT ON api.om_context TO web_anon;
 GRANT SELECT ON api.om_site TO web_anon;
