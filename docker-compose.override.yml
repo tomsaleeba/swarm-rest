@@ -12,9 +12,6 @@ services:
       ES_URL: http://elk:${ES_PORT}
       INDEX_NAME: ${ES_INDEX_NAME}
     restart: unless-stopped
-    depends_on:
-      - server
-      - elk
     logging:
       driver: "json-file"
       options:
@@ -72,8 +69,6 @@ services:
       BACKUP_PREFIX: ${ES_SNAPSHOT_PREFIX}
       CRON_SCHEDULE: ${ES_SNAPSHOT_CRON_SCHEDULE}
     restart: unless-stopped
-    depends_on:
-      - elk
     logging:
       driver: "json-file"
       options:

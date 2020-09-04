@@ -1,0 +1,22 @@
+{
+  "license": "MIT",
+  "scripts": {
+    "start": "node index.js | pino-pretty",
+    "start:debug": "node --inspect-brk index.js | pino-pretty",
+    "start:prod": "node index.js",
+    "start:watch": "nodemon --ext js,mjs,json --delay 2 --watch index.js --watch package.json --exec bash -c 'yarn start'",
+    "lint": "prettier --check index.js"
+  },
+  "dependencies": {
+    "axios": "^0.20.0",
+    "express": "^4.17.1",
+    "express-pino-logger": "^5.0.0",
+    "jsonld": "^3.1.1",
+    "pino": "^6.5.1"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.4",
+    "pino-pretty": "^4.2.0",
+    "prettier": "^2.1.1"
+  }
+}
