@@ -445,8 +445,8 @@ WHERE site_location_visit_id NOT IN (SELECT * FROM unpublished_site_location_vis
 
 
 
-DROP VIEW IF EXISTS api.metadata_dictionary;
-CREATE VIEW api.metadata_dictionary AS
+DROP VIEW IF EXISTS api.metadata_dictionary_internal;
+CREATE VIEW api.metadata_dictionary_internal AS
 SELECT
   'basal_point' AS variable, -- FIXME is this really "basal", and do we need it?
   point_id AS code,
@@ -1177,7 +1177,7 @@ GRANT SELECT ON api.veg_voucher TO web_anon;
 GRANT SELECT ON api.veg_pi TO web_anon;
 GRANT SELECT ON api.veg_basal TO web_anon;
 GRANT SELECT ON api.search TO web_anon;
-GRANT SELECT ON api.metadata_dictionary TO web_anon;
+GRANT SELECT ON api.metadata_dictionary_internal TO web_anon;
 
 GRANT SELECT ON api.om_context TO web_anon;
 GRANT SELECT ON api.om_site TO web_anon;
