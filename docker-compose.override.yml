@@ -1,5 +1,5 @@
 # adds ElasticSearch and stats facade, which you may not want during dev
-version: '3.4'
+version: '3.7'
 services:
   stats_facade:
     image: ternandsparrow/swarm-rest-metrics-facade:2.1.1
