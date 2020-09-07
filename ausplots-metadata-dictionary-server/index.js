@@ -25,6 +25,7 @@ const p = 'http://linked.data.gov.au/def/ausplots-cv'
 const bioregionNameCatVarId = `${p}/a9754a72-c2f7-4a9d-9686-9df78fb65e62`
 const observerCatVarId = `${p}/f06cad16-dce2-412a-9e47-1834b483b8db`
 const stateCatVarId = `${p}/c27df9ec-ef2a-482c-b79f-22b03efcacd4`
+const datumCatVarId = `${p}/3b2c4499-9257-498d-a18f-6405e5ca8787`
 const sentryDsn = process.env.SENTRY_DSN
 
 const app = express()
@@ -101,8 +102,15 @@ async function parseData(data) {
     observerCatVarId,
     stateCatVarId,
   ]
+  const ignoreList = [
+    `${p}/9dc8290e-ce1f-48b3-a6d3-78acf1f56b7b`, // Miscellaneous
+  ]
   const variables = varsToProcess.reduce((accum, currVarId) => {
     const currVar = getEntityFromGraph(graph, currVarId)
+    if (ignoreList.includes(currVarId)) {
+      logger.debug(`Ignoring variable with ID=${currVarId}`)
+      return accum
+    }
     const values = processValues(currVar, graph)
     for (const currValue of values) {
       const codes = getVariableCodes(currVar)
@@ -125,12 +133,12 @@ async function parseData(data) {
 
 function getVariableCodes(val) {
   const mapping = {
-    [`${p}/e502f1db-b8fe-4e32-9a1a-f761b9e98029`]: ['point_id'], // FIXME is this correct?
+    [`${p}/e502f1db-b8fe-4e32-9a1a-f761b9e98029`]: ['point_id'],
     [bioregionNameCatVarId]: ['bioregion_name'],
     [`${p}/5acbf972-3cf2-4516-9a07-1fa1b8a2acbd`]: ['coarse_frag_abund'],
     [`${p}/b446ff51-dc76-472e-bb2f-19706a089b32`]: ['coarse_frag_shape'],
     [`${p}/9a280139-f00e-45ab-b08e-93e3164b4bd2`]: ['coarse_frag_size'],
-    [`${p}/3b2c4499-9257-498d-a18f-6405e5ca8787`]: ['pit_marker_datum'], // FIXME is this correct?
+    [datumCatVarId]: ['pit_marker_datum'], // FIXME is this correct?
     [`${p}/f0f17aeb-8d72-4b17-9a13-f625cdc30c08`]: ['disturbance'],
     [`${p}/bca813f6-9182-43a5-8975-8d804cc61b31`]: ['drainage_type'],
     [`${p}/aa40dc68-706e-4273-a547-3235def21d1c`]: ['effervescence'],
@@ -170,32 +178,35 @@ function getVariableCodes(val) {
     [`${p}/9be3370e-6bce-4418-a4f5-ba3800951344`]: ['surface_soil_condition'],
     [`${p}/fc51058d-ab4b-4875-9655-7356d1b6a009`]: ['surface_strew_size'],
   }
-  const ignoreList = [
-    `${p}/9dc8290e-ce1f-48b3-a6d3-78acf1f56b7b`, // Miscellaneous
-  ]
   const id = val['@id']
-  if (ignoreList.includes(id)) {
-    logger.debug(`Ignoring variable with ID=${id}`)
-    return []
-  }
   const found = mapping[id]
   if (found) {
     return found
   }
-  const msg = `Programmer problem: Could not find variable code mapping for ID=${id}`
-  Sentry.captureException(new Error(msg))
-  logger.warn(msg)
+  sentryWarn(
+    `Programmer problem: Could not find variable code mapping for ID=${id}`,
+  )
   return []
 }
 
 function processValues(variableRecord, graph) {
+  const varRecordId = variableRecord['@id']
+  const varIdsWithoutNotation = [datumCatVarId]
   return variableRecord.member.map(memberId => {
     const memberRecord = getEntityFromGraph(graph, memberId)
     if (!memberRecord) {
       throw new Error(`Could not find record with @id=${memberId}`)
     }
+    const isWithoutNotation = varIdsWithoutNotation.includes(varRecordId)
+    const code = isWithoutNotation ? memberRecord.label : memberRecord.notation
+    if (!code) {
+      sentryWarn(
+        `Missing code for member ID=${memberId} as part of variable with ` +
+          `ID=${varRecordId}`,
+      )
+    }
     return {
-      code: memberRecord.notation,
+      code,
       label: memberRecord.label,
       definition: memberRecord.definition,
     }
@@ -219,3 +230,11 @@ app.listen(port, () => {
     Cat var container ID: ${categoricalVariablesContainerId}
     Sentry DSN:           ${sentryDsn}`)
 })
+
+function sentryWarn(obj) {
+  logger.warn(msg)
+  Sentry.withScope(scope => {
+    scope.setLevel('warning')
+    Sentry.captureException(obj)
+  })
+}
