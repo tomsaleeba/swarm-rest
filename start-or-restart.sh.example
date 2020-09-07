@@ -18,11 +18,14 @@ export SWARM_PROD_HOST=some.host # TODO change me
 export SWARM_PROD_PORT=5432 # change me if needed
 export SWARM_PROD_DB=somedb # TODO change me
 
-# DNS that points to this service (only supports one value). HTTP Host header must equal this for server to route
-# correctly. Set to 'localhost' in dev.
+# DNS that points to this service (only supports one value). HTTP Host header
+# must equal this for server to route correctly. Set to 'localhost' in dev.
 export PUBLIC_DNS_NAME=swarmapi.ausplots.aekos.org.au
 
-# Other secrets
+# Sentry.io DSN (API key)
+# enable this, and supply a value, to have errors from the stack reported to
+# Sentry.
+# export SENTRY_DSN=https://11111111111111111111111111111111@o222222.ingest.sentry.io/3333333
 
 # Read more about this setting in the doco:
 # https://postgrest.org/en/stable/configuration.html?highlight=jwt#jwt-secret.

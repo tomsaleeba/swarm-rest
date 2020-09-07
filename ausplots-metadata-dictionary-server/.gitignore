@@ -1,2 +1,4 @@
 node_modules
 all.json
+yarn-error.log
+run.sh

@@ -41,6 +41,8 @@ services:
     image: ternandsparrow/ausplots-metadata-dictionary-server:dev
     container_name: swarmrest_metadict
     restart: unless-stopped
+    environment:
+      SENTRY_DSN: ${SENTRY_DSN}
     logging:
       driver: "json-file"
       options:
