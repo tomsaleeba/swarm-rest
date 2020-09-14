@@ -118,7 +118,11 @@ SELECT
   NULLIF(wfod.tax_infraspecific_epithet, '') AS infraspecific_epithet,
   NULLIF(wfod.tax_status, '') AS taxa_status,
   NULLIF(trim(wfod.tax_genus || ' '
-      || wfod.tax_specific_epithet), '') AS genus_species
+      || wfod.tax_specific_epithet), '') AS genus_species,
+  NULLIF(scientific_name_authorship, '') AS authorship,
+  NULLIF(scientific_name_published_in, '') AS published_in,
+  NULLIF(scientific_name, '') AS scientific_name,
+  NULLIF(taxon_rank, '') AS "rank"
 FROM public.wfo_determination AS wfod;
 
 
