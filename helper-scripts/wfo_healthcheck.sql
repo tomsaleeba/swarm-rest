@@ -19,13 +19,12 @@ GROUP BY 1
 ORDER BY 1;
 
 
-\pset title 'A sample of the most occurring species that WFO could not match. They have a "match record" but no taxon_rank value (not NULL, but a zero length string). These are the "blanks" from the table above.'
+\pset title 'All the species that WFO could not match. They have a "match record" but no taxon_rank value (not NULL, but a zero length string). These are the "blanks" from the table above.'
 SELECT original_herbarium_determination, count(*)
 FROM wfo_determination
 WHERE taxon_rank = ''
 GROUP BY 1
-ORDER BY 2 DESC
-LIMIT 25;
+ORDER BY 2 DESC;
 
 
 \pset title 'A sample of the most occurring herbarium determination records that have no WFO match record. This is either because we made the decision not to send it or something else went wrong (the call to match failed?). You should NOT see things that look like real species names in this table.'
