@@ -5,21 +5,21 @@
 -- \pset format html
 
 \pset title 'How many records do we have?'
-SELECT 'WFO records', count(*)
+SELECT 'WFO records' AS "Record type", count(*)
 FROM wfo_determination
 UNION
 SELECT 'Herbarium determination records', count(*)
 FROM herbarium_determination;
 
 
-\pset title 'Breakdown of record count for different values of taxon_rank'
+\pset title 'Breakdown of record (veg vouchers) count for different values of taxon_rank. Blanks are values that we sent to WFO but did NOT get a match.'
 SELECT taxon_rank, count(*)
 FROM wfo_determination
 GROUP BY 1
 ORDER BY 1;
 
 
-\pset title 'A sample of the species that WFO could not match. They have a "match record" but no taxon_rank value (not NULL, but a zero length string)'
+\pset title 'A sample of the most occurring species that WFO could not match. They have a "match record" but no taxon_rank value (not NULL, but a zero length string). These are the "blanks" from the table above.'
 SELECT original_herbarium_determination, count(*)
 FROM wfo_determination
 WHERE taxon_rank = ''
@@ -52,7 +52,7 @@ ORDER BY 2 DESC
 LIMIT 25;
 
 
-\pset title 'Count of "has no WFO match record" species (the species in the table above). This list should only be things that are not real species names'
+\pset title 'Count of "has no WFO match record" species (the species in the table above)'
 SELECT count(DISTINCT herbarium_determination) AS distinct_species, count(*) AS total
 FROM herbarium_determination
 WHERE trim(herbarium_determination) NOT IN (
