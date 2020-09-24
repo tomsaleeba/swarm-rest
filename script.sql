@@ -844,6 +844,28 @@ ON sc.id = the_obs.id;
 
 
 
+DROP VIEW IF EXISTS api.ausplots_stats;
+CREATE VIEW api.ausplots_stats AS
+SELECT
+  'Site count' AS name,
+  count(*) AS stat
+FROM site_location
+UNION
+SELECT
+  'Published visit count',
+  count(*)
+FROM site_location_visit
+WHERE ok_to_publish = true
+UNION
+SELECT
+  'Site count for state code: ' || substring(site_location_name, 1, 2),
+  count(*)
+FROM site_location
+GROUP BY 1
+;
+
+
+
 -- Soils2Satellites views
 DROP VIEW IF EXISTS api.s2s_study_location;
 CREATE VIEW api.s2s_study_location AS
@@ -931,6 +953,7 @@ GRANT SELECT ON api.om_observation TO web_anon;
 GRANT SELECT ON api.om_observation_collection TO web_anon;
 
 GRANT SELECT ON api.ross TO web_anon;
+GRANT SELECT ON api.ausplots_stats TO web_anon;
 
 GRANT SELECT ON api.s2s_study_location TO web_anon;
 
