@@ -12,7 +12,7 @@ SELECT 'Herbarium determination records', count(*)
 FROM herbarium_determination;
 
 
-\pset title 'Breakdown of record (veg vouchers) count for different values of taxon_rank. Blanks are values that we sent to WFO but did NOT get a match.'
+\pset title 'Breakdown of record (veg vouchers) count for different values of the rank from WFO. Blanks are values that we sent to WFO but did NOT get a match.'
 SELECT
   taxon_rank AS "rank",
   count(*) AS "Count of veg vouchers"
@@ -21,7 +21,7 @@ GROUP BY 1
 ORDER BY 1;
 
 
-\pset title 'Breakdown of record (veg vouchers) count for different values of tax_group. Blanks are values that we sent to WFO but did NOT get a match.'
+\pset title 'Breakdown of record (veg vouchers) count for different values of the taxa_group from WFO. Blanks are values that we sent to WFO but did NOT get a match.'
 SELECT
   tax_group AS taxa_group,
   count(*) AS "Count of veg vouchers"
