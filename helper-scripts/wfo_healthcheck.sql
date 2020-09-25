@@ -110,3 +110,11 @@ AND hd.veg_barcode IN (
   FROM wfo_determination
 )
 LIMIT 25;
+
+
+\pset title 'Sample of matches to use for checking WFO accuracy by hand. Will be different every time the report runs. Sample size will change slightly but is roughly 50.'
+SELECT
+  original_herbarium_determination AS "Name sent to WFO",
+  scientific_name AS "Standardised name match we got back"
+FROM wfo_determination
+WHERE (random() * 700)::int = 1;
