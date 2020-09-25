@@ -118,7 +118,7 @@ async function parseData(data) {
       for (const currCode of codes) {
         accum.push({
           variableCode: currCode,
-          variableLabel: currVar.label,
+          variableLabel: currVar.label || currCode,
           variableDefinition: currVar.definition,
           variableValueCode: currValue.code,
           variableValueLabel: currValue.label,
@@ -128,6 +128,40 @@ async function parseData(data) {
     }
     return accum
   }, [])
+  const nonVocabVarsToProcess = [
+    [`${p}/5ff6bc93-0d26-420f-80de-a898d51962aa`, 'basal_area'],
+    [`${p}/cde9be44-f208-4411-9f16-9dab96d4c425`, 'climatic_condition'],
+    [`${p}/aa11e5f7-aec2-4e92-95b8-6332911f0c4e`, 'colour_when_dry'],
+    [`${p}/7d6a1fdb-111a-4dbe-8534-a5e48d79750c`, 'colour_when_moist'],
+    [`${p}/7f3ca1bc-ba41-49b6-adb9-05e640f89d79`, 'horizon'], // TODO does 'soil horizon' == 'horizon'?
+    [`${p}/bc8156c2-c2a7-4b2b-8ece-3f1959734d6e`, 'in_canopy_sky'],
+    [`${p}/11eb41e9-4f8f-4998-8443-e2748d8081a0`, 'lower_depth'], // TODO or 'soil sample depth'?
+    [`${p}/7903d149-6fcd-4038-928c-4987b00e451e`, 'mass_flowering_event'],
+    [`${p}/e8bde3f7-0c4f-442e-8e88-08273f57fec8`, 'ground_1_dominant'],
+    [`${p}/e9aa8f39-4fb9-49fc-b48b-861c22d57971`, 'ground_2_dominant'],
+    [`${p}/3e1d9d34-023a-47ae-9b2c-e07eeaaea2ce`, 'ground_3_dominant'],
+    [`${p}/9f770911-7b5c-45c8-b35f-f6dbc7840659`, 'mid_1_dominant'],
+    [`${p}/53f39410-6e5c-4555-81b4-ce0d48b22166`, 'mid_2_dominant'],
+    [`${p}/d99a8ef8-bcac-4496-b3e6-5d0391e0c7c9`, 'mid_3_dominant'],
+    [`${p}/69ed5cf9-e617-4f4a-bb13-899351317e52`, 'upper_1_dominant'],
+    [`${p}/ef5bc0c0-8e17-4d33-a019-6c86c6ce7df0`, 'upper_2_dominant'],
+    [`${p}/91d40b5f-aec1-4812-8277-a35af77c3caa`, 'upper_3_dominant'],
+    [`${p}/686c8e7b-78ab-4094-8a38-733eefe21e0a`, 'ph'],
+    [`${p}/b6049501-b90f-4ab0-b64b-dff4f588e3e4`, 'site_aspect'],
+    [`${p}/8ad3966c-9f23-4df9-9c37-5b8cee679356`, 'site_slope'],
+    [`${p}/ff69c254-e549-45e8-a320-e28ead5092c8`, 'vegetation_condition'],
+  ]
+  nonVocabVarsToProcess.forEach(([currVarId, variableCode]) => {
+    const currVar = getEntityFromGraph(graph, currVarId)
+    variables.push({
+      variableCode: variableCode,
+      variableLabel: currVar.label || variableCode,
+      variableDefinition: currVar.definition,
+      variableValueCode: null,
+      variableValueLabel: null,
+      variableValueDefinition: null,
+    })
+  })
   return variables
 }
 
