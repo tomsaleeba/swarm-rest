@@ -98,19 +98,7 @@ DROP VIEW IF EXISTS api.wfo_determination_pretty;
 CREATE VIEW api.wfo_determination_pretty AS
 SELECT
   wfod.veg_barcode,
-  NULLIF(
-    trim(
-      regexp_replace(
-          coalesce(wfod.tax_genus, '') || ' ' ||
-          coalesce(wfod.tax_specific_epithet, '') || ' ' ||
-          coalesce(wfod.tax_infraspecific_rank, '') || ' ' ||
-          coalesce(wfod.tax_infraspecific_epithet, ''),
-        E'\\s+',
-        ' ',
-        'g'
-      )
-    ), ''
-  ) AS standardised_name,
+  NULLIF(wfod.scientific_name, '') AS standardised_name,
   NULLIF(wfod.tax_family, '') AS family,
   NULLIF(wfod.tax_genus, '') AS genus,
   NULLIF(wfod.tax_specific_epithet, '') AS specific_epithet,
@@ -119,10 +107,9 @@ SELECT
   NULLIF(wfod.tax_status, '') AS taxa_status,
   NULLIF(trim(wfod.tax_genus || ' '
       || wfod.tax_specific_epithet), '') AS genus_species,
-  NULLIF(scientific_name_authorship, '') AS authorship,
-  NULLIF(scientific_name_published_in, '') AS published_in,
-  NULLIF(scientific_name, '') AS scientific_name,
-  NULLIF(taxon_rank, '') AS "rank"
+  NULLIF(wfod.scientific_name_authorship, '') AS authorship,
+  NULLIF(wfod.scientific_name_published_in, '') AS published_in,
+  NULLIF(wfod.taxon_rank, '') AS "rank"
 FROM public.wfo_determination AS wfod;
 
 
@@ -330,7 +317,18 @@ SELECT
   sl.site_location_name,
   hd.herbarium_determination,
   hd.is_uncertain_determination,
-  wfod_pretty.*,
+  hd.veg_barcode,
+  wfod_pretty.standardised_name,
+  wfod_pretty.family,
+  wfod_pretty.genus,
+  wfod_pretty.specific_epithet,
+  wfod_pretty.infraspecific_rank,
+  wfod_pretty.infraspecific_epithet,
+  wfod_pretty.taxa_status,
+  wfod_pretty.genus_species,
+  wfod_pretty.authorship,
+  wfod_pretty.published_in,
+  wfod_pretty.rank,
   slv.visit_start_date,
   slv.site_location_visit_id,
   gv.primary_gen_barcode,
@@ -371,7 +369,18 @@ SELECT
   pi.dead,
   pi.growth_form,
   pi.height,
-  wfod_pretty.*
+  hd.veg_barcode,
+  wfod_pretty.standardised_name,
+  wfod_pretty.family,
+  wfod_pretty.genus,
+  wfod_pretty.specific_epithet,
+  wfod_pretty.infraspecific_rank,
+  wfod_pretty.infraspecific_epithet,
+  wfod_pretty.taxa_status,
+  wfod_pretty.genus_species,
+  wfod_pretty.authorship,
+  wfod_pretty.published_in,
+  wfod_pretty.rank
 FROM public.site_location AS sl
 INNER JOIN public.site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
@@ -398,7 +407,18 @@ SELECT
   sl.site_location_id,
   ba.point_id,
   hd.herbarium_determination,
-  wfod_pretty.*,
+  hd.veg_barcode,
+  wfod_pretty.standardised_name,
+  wfod_pretty.family,
+  wfod_pretty.genus,
+  wfod_pretty.specific_epithet,
+  wfod_pretty.infraspecific_rank,
+  wfod_pretty.infraspecific_epithet,
+  wfod_pretty.taxa_status,
+  wfod_pretty.genus_species,
+  wfod_pretty.authorship,
+  wfod_pretty.published_in,
+  wfod_pretty.rank,
   ba.hits,
   ba.basal_area_factor,
   ba.basal_area
@@ -428,7 +448,18 @@ SELECT
   slp.latitude,
   slp.longitude,
   hd.herbarium_determination,
-  wfod_pretty.*
+  hd.veg_barcode,
+  wfod_pretty.standardised_name,
+  wfod_pretty.family,
+  wfod_pretty.genus,
+  wfod_pretty.specific_epithet,
+  wfod_pretty.infraspecific_rank,
+  wfod_pretty.infraspecific_epithet,
+  wfod_pretty.taxa_status,
+  wfod_pretty.genus_species,
+  wfod_pretty.authorship,
+  wfod_pretty.published_in,
+  wfod_pretty.rank
 FROM public.site_location AS sl
 INNER JOIN public.site_location_visit AS slv
   ON slv.site_location_id = sl.site_location_id
@@ -813,6 +844,28 @@ ON sc.id = the_obs.id;
 
 
 
+DROP VIEW IF EXISTS api.ausplots_stats;
+CREATE VIEW api.ausplots_stats AS
+SELECT
+  'Site count' AS name,
+  count(*) AS stat
+FROM site_location
+UNION
+SELECT
+  'Published visit count',
+  count(*)
+FROM site_location_visit
+WHERE ok_to_publish = true
+UNION
+SELECT
+  'Site count for state code: ' || substring(site_location_name, 1, 2),
+  count(*)
+FROM site_location
+GROUP BY 1
+;
+
+
+
 -- Soils2Satellites views
 DROP VIEW IF EXISTS api.s2s_study_location;
 CREATE VIEW api.s2s_study_location AS
@@ -900,6 +953,7 @@ GRANT SELECT ON api.om_observation TO web_anon;
 GRANT SELECT ON api.om_observation_collection TO web_anon;
 
 GRANT SELECT ON api.ross TO web_anon;
+GRANT SELECT ON api.ausplots_stats TO web_anon;
 
 GRANT SELECT ON api.s2s_study_location TO web_anon;
 
