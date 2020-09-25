@@ -93,6 +93,7 @@ FROM public.site_location_point
 WHERE point = 'SW'; -- need to pick a single point to get coordinates
 
 
+
 -- WFO = http://www.worldfloraonline.org/
 DROP VIEW IF EXISTS api.wfo_determination_pretty;
 CREATE VIEW api.wfo_determination_pretty AS
@@ -105,12 +106,14 @@ SELECT
   NULLIF(wfod.tax_infraspecific_rank, '') AS infraspecific_rank,
   NULLIF(wfod.tax_infraspecific_epithet, '') AS infraspecific_epithet,
   NULLIF(wfod.tax_status, '') AS taxa_status,
+  NULLIF(wfod.tax_group, '') AS taxa_group,
   NULLIF(trim(wfod.tax_genus || ' '
       || wfod.tax_specific_epithet), '') AS genus_species,
   NULLIF(wfod.scientific_name_authorship, '') AS authorship,
   NULLIF(wfod.scientific_name_published_in, '') AS published_in,
   NULLIF(wfod.taxon_rank, '') AS "rank"
 FROM public.wfo_determination AS wfod;
+
 
 
 DROP VIEW IF EXISTS api.site_inc_unpub;
@@ -325,6 +328,7 @@ SELECT
   wfod_pretty.infraspecific_rank,
   wfod_pretty.infraspecific_epithet,
   wfod_pretty.taxa_status,
+  wfod_pretty.taxa_group,
   wfod_pretty.genus_species,
   wfod_pretty.authorship,
   wfod_pretty.published_in,
@@ -377,6 +381,7 @@ SELECT
   wfod_pretty.infraspecific_rank,
   wfod_pretty.infraspecific_epithet,
   wfod_pretty.taxa_status,
+  wfod_pretty.taxa_group,
   wfod_pretty.genus_species,
   wfod_pretty.authorship,
   wfod_pretty.published_in,
@@ -415,6 +420,7 @@ SELECT
   wfod_pretty.infraspecific_rank,
   wfod_pretty.infraspecific_epithet,
   wfod_pretty.taxa_status,
+  wfod_pretty.taxa_group,
   wfod_pretty.genus_species,
   wfod_pretty.authorship,
   wfod_pretty.published_in,
@@ -456,6 +462,7 @@ SELECT
   wfod_pretty.infraspecific_rank,
   wfod_pretty.infraspecific_epithet,
   wfod_pretty.taxa_status,
+  wfod_pretty.taxa_group,
   wfod_pretty.genus_species,
   wfod_pretty.authorship,
   wfod_pretty.published_in,

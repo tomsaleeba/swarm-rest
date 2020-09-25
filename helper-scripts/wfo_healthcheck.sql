@@ -19,6 +19,12 @@ GROUP BY 1
 ORDER BY 1;
 
 
+\pset title 'Breakdown of record (veg vouchers) count for different values of tax_group. Blanks are values that we sent to WFO but did NOT get a match.'
+SELECT tax_group, count(*)
+FROM wfo_determination
+GROUP BY 1;
+
+
 \pset title 'All the species that WFO could not match. They have a "match record" but no taxon_rank value (not NULL, but a zero length string). These are the "blanks" from the table above.'
 SELECT original_herbarium_determination, count(*)
 FROM wfo_determination
