@@ -13,20 +13,26 @@ FROM herbarium_determination;
 
 
 \pset title 'Breakdown of record (veg vouchers) count for different values of taxon_rank. Blanks are values that we sent to WFO but did NOT get a match.'
-SELECT taxon_rank, count(*)
+SELECT
+  taxon_rank AS "rank",
+  count(*) AS "Count of veg vouchers"
 FROM wfo_determination
 GROUP BY 1
 ORDER BY 1;
 
 
 \pset title 'Breakdown of record (veg vouchers) count for different values of tax_group. Blanks are values that we sent to WFO but did NOT get a match.'
-SELECT tax_group, count(*)
+SELECT
+  tax_group AS taxa_group,
+  count(*) AS "Count of veg vouchers"
 FROM wfo_determination
 GROUP BY 1;
 
 
-\pset title 'All the species that WFO could not match. They have a "match record" but no taxon_rank value (not NULL, but a zero length string). These are the "blanks" from the table above.'
-SELECT original_herbarium_determination, count(*)
+\pset title 'All the species that WFO could not match. They have a "match record" but no taxon_rank value (not NULL, but a zero length string). These are the "blanks" from the two tables above.'
+SELECT
+  original_herbarium_determination AS "Herbarium determination",
+  count(*) AS "Count of veg vouchers"
 FROM wfo_determination
 WHERE taxon_rank = ''
 GROUP BY 1
