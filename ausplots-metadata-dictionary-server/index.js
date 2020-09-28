@@ -165,7 +165,7 @@ async function parseData(data) {
     const currVar = getEntityFromGraph(graph, currVarId)
     variables.push({
       variableCode: variableCode,
-      variableLabel: currVar.label || variableCode,
+      variableLabel: currVar.label || currVar.prefLabel || variableCode,
       variableDefinition: currVar.definition,
       variableValueCode: null,
       variableValueLabel: null,
@@ -263,7 +263,9 @@ function getVariableCodeMappings(val) {
       { code: 'outcrop_lithology', label: 'Outcrop lithology' },
       { code: 'other_outcrop_lithology', label: 'Other outcrop lithology' },
     ],
-    [`${p}/5b18e191-31f1-459b-90a0-31ee3f614846`]: ['pit_marker_mga_zones'],
+    [`${p}/5b18e191-31f1-459b-90a0-31ee3f614846`]: [
+      { code: 'pit_marker_mga_zones', label: 'Pit marker MGA zone' },
+    ],
     [`${p}/222c85bc-a6f7-4e78-87ef-9684f513bcc6`]: ['microrelief'],
     [`${p}/16b85cbf-7956-4131-bf21-2d9e7a08cb96`]: ['mottles_abundance'],
     [`${p}/c9c9d4df-6342-45b8-ab99-b07496cadf1b`]: ['mottles_colour'],
