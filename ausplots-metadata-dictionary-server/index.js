@@ -113,12 +113,19 @@ async function parseData(data) {
     }
     const values = processValues(currVar, graph)
     for (const currValue of values) {
-      const codes = getVariableCodes(currVar)
-      // we have some variables that share the same vocab
-      for (const currCode of codes) {
+      // we have some variables that share the same vocab, so we need to make
+      // sure we adjust the values for this particular usage.
+      const mappings = getVariableCodeMappings(currVar)
+      for (const currMapping of mappings) {
+        const variableCode = currMapping.code || currMapping
+        const variableLabel =
+          currMapping.label ||
+          currVar.label ||
+          currVar.prefLabel ||
+          variableCode
         accum.push({
-          variableCode: currCode,
-          variableLabel: currVar.label || currCode,
+          variableCode,
+          variableLabel,
           variableDefinition: currVar.definition,
           variableValueCode: currValue.code,
           variableValueLabel: currValue.label,
@@ -133,9 +140,12 @@ async function parseData(data) {
     [`${p}/cde9be44-f208-4411-9f16-9dab96d4c425`, 'climatic_condition'],
     [`${p}/aa11e5f7-aec2-4e92-95b8-6332911f0c4e`, 'colour_when_dry'],
     [`${p}/7d6a1fdb-111a-4dbe-8534-a5e48d79750c`, 'colour_when_moist'],
-    [`${p}/7f3ca1bc-ba41-49b6-adb9-05e640f89d79`, 'horizon'], // TODO does 'soil horizon' == 'horizon'?
+    [`${p}/2ec446bb-a098-4016-9fca-80c667597bbe`, 'dead'],
+    [`${p}/85a6a2b1-51e4-4fe4-9792-da54423ba3cf`, 'ec'],
+    [`${p}/8b217978-1aec-4e4a-ac9d-b08a47ebf0a4`, 'height'],
+    [`${p}/7f3ca1bc-ba41-49b6-adb9-05e640f89d79`, 'horizon'],
     [`${p}/bc8156c2-c2a7-4b2b-8ece-3f1959734d6e`, 'in_canopy_sky'],
-    [`${p}/11eb41e9-4f8f-4998-8443-e2748d8081a0`, 'lower_depth'], // TODO or 'soil sample depth'?
+    [`${p}/11eb41e9-4f8f-4998-8443-e2748d8081a0`, 'lower_depth'],
     [`${p}/7903d149-6fcd-4038-928c-4987b00e451e`, 'mass_flowering_event'],
     [`${p}/e8bde3f7-0c4f-442e-8e88-08273f57fec8`, 'ground_1_dominant'],
     [`${p}/e9aa8f39-4fb9-49fc-b48b-861c22d57971`, 'ground_2_dominant'],
@@ -162,17 +172,84 @@ async function parseData(data) {
       variableValueDefinition: null,
     })
   })
+  // variables that we'll never find a definition for elsewhere as they're
+  // specific to our R package.
+  const ausplotsRSpecificVars = [
+    [
+      'authorship',
+      'standardised author of taxonomic name from World Flora Online',
+    ],
+    ['family', 'plant family from World Flora Online'],
+    ['genus', 'plant genus from World Flora Online'],
+    [
+      'genus_species',
+      'species level scientific name matched to World Flora Online',
+    ],
+    [
+      'hits_unique',
+      'unique point intercept hit identifier concatenation of transect and point_number',
+    ],
+    [
+      'infraspecific_epithet',
+      'epithet or name identifying infraspecific taxon matched to World Flora Online',
+    ],
+    [
+      'infraspecific_rank',
+      'rank of infraspecific taxon matched to World Flora Online',
+    ],
+    ['published_in', 'taxonomic publication details from World Flora Online'],
+    ['rank', 'lowest applicable taxonomic rank from World Flora Online'],
+    [
+      'site_unique',
+      'unique site survey identifier concatenation of site_location_name and site_location_visit_ID',
+    ],
+    [
+      'specific_epithet',
+      'epithet or name identifying species matched to World Flora Online',
+    ],
+    [
+      'standardised_name',
+      'scientific name at lowest available taxonomic level matched to World Flora Online',
+    ],
+    ['taxa_group', 'major plant taxonomic group from World Flora Online'],
+    ['taxa_status', 'flag for accepted plant name from World Flora Online'],
+  ]
+  ausplotsRSpecificVars.forEach(([currVarId, currVarDef]) => {
+    variables.push({
+      variableCode: currVarId,
+      variableLabel: currVarId,
+      variableDefinition: currVarDef,
+      variableValueCode: null,
+      variableValueLabel: null,
+      variableValueDefinition: null,
+    })
+  })
+  variables.sort((a, b) => {
+    if (a.variableCode < b.variableCode) {
+      return -1
+    }
+    if (a.variableCode > b.variableCode) {
+      return 1
+    }
+    if (a.variableValueCode < b.variableValueCode) {
+      return -1
+    }
+    if (a.variableValueCode > b.variableValueCode) {
+      return 1
+    }
+    return 0
+  })
   return variables
 }
 
-function getVariableCodes(val) {
+function getVariableCodeMappings(val) {
   const mapping = {
     [`${p}/e502f1db-b8fe-4e32-9a1a-f761b9e98029`]: ['point_id'],
     [bioregionNameCatVarId]: ['bioregion_name'],
     [`${p}/5acbf972-3cf2-4516-9a07-1fa1b8a2acbd`]: ['coarse_frag_abund'],
     [`${p}/b446ff51-dc76-472e-bb2f-19706a089b32`]: ['coarse_frag_shape'],
     [`${p}/9a280139-f00e-45ab-b08e-93e3164b4bd2`]: ['coarse_frag_size'],
-    [datumCatVarId]: ['pit_marker_datum'], // FIXME is this correct?
+    [datumCatVarId]: [{ code: 'pit_marker_datum', label: 'Pit marker datum' }],
     [`${p}/f0f17aeb-8d72-4b17-9a13-f625cdc30c08`]: ['disturbance'],
     [`${p}/bca813f6-9182-43a5-8975-8d804cc61b31`]: ['drainage_type'],
     [`${p}/aa40dc68-706e-4273-a547-3235def21d1c`]: ['effervescence'],
@@ -183,15 +260,20 @@ function getVariableCodes(val) {
     [`${p}/1a250c12-c95e-401e-9f16-8bce83bd691d`]: ['landform_element'],
     [`${p}/4f9e9fa9-5327-45fa-9ab2-be81e7a2a89c`]: ['landform_pattern'],
     [`${p}/cb0c2aab-6556-4344-9d5d-5bd0ecab2267`]: [
-      'outcrop_lithology',
-      'other_outcrop_lithology',
+      { code: 'outcrop_lithology', label: 'Outcrop lithology' },
+      { code: 'other_outcrop_lithology', label: 'Other outcrop lithology' },
     ],
     [`${p}/5b18e191-31f1-459b-90a0-31ee3f614846`]: ['pit_marker_mga_zones'],
     [`${p}/222c85bc-a6f7-4e78-87ef-9684f513bcc6`]: ['microrelief'],
     [`${p}/16b85cbf-7956-4131-bf21-2d9e7a08cb96`]: ['mottles_abundance'],
     [`${p}/c9c9d4df-6342-45b8-ab99-b07496cadf1b`]: ['mottles_colour'],
     [`${p}/b512f19f-f659-4e32-b9a0-18aa72c25333`]: ['mottles_size'],
-    [observerCatVarId]: ['observer_veg', 'observer_soil', 'described_by'],
+    [observerCatVarId]: [
+      { code: 'observer_veg', label: 'Observer veg' },
+      { code: 'observer_soil', label: 'Observer soil' },
+      { code: 'described_by', label: 'Described by' },
+      { code: 'collected_by', label: 'Collected by' },
+    ],
     [`${p}/009e5822-4344-4b5a-832b-46a3adcf042f`]: ['pedality_fabric'],
     [`${p}/c8029ec5-940f-48cc-b3d1-50cadf3dc2fd`]: ['pedality_grade'],
     [`${p}/337b09de-0b39-43d8-b2f0-417e1085bf2e`]: ['pedality_type'],
@@ -199,14 +281,13 @@ function getVariableCodes(val) {
     [`${p}/2ecd0e04-d5cd-4748-849a-ff6810567835`]: ['segregations_form'],
     [`${p}/a58f8f2e-6067-48af-b0f7-c8c19c811ba2`]: ['segregations_nature'],
     [`${p}/b2e65552-b85a-4c01-a953-7934bd65b84f`]: ['segregations_size'],
-    // FIXME need soil_observation_type?
     [`${p}/0968f477-fe5d-4c90-b4b3-71a41bcba3e2`]: ['texture_grade'],
     [`${p}/55775cfc-eb1c-4151-904a-1654a2649799`]: ['texture_modifier'],
     [`${p}/a7258bee-8f9f-4f0f-ae77-a5def5c22936`]: ['texture_qualifier'],
     [stateCatVarId]: ['state'],
     [`${p}/d6f16e28-0913-4b06-9919-c13d9a9f0832`]: [
-      'smallest_size_1',
-      'smallest_size_2',
+      { code: 'smallest_size_1', label: 'Smallest Size 1' },
+      { code: 'smallest_size_2', label: 'Smallest Size 2' },
     ],
     [`${p}/b15f3b2b-99dd-4ec4-b1ad-15ee7ed1658e`]: ['substrate'],
     [`${p}/9be3370e-6bce-4418-a4f5-ba3800951344`]: ['surface_soil_condition'],
