@@ -59,17 +59,17 @@ class TestUM(unittest.TestCase):
 
     def test_veg_voucher_01(self):
         '''Is the /veg_voucher endpoint returning the expected number of fields?'''
-        item = get_single_element_json('veg_voucher', 11, self)
+        item = get_single_element_json('veg_voucher', 23, self)
         self.assertTrue(item['veg_barcode'])
 
     def test_veg_pi_01(self):
         '''Is the /veg_pi endpoint returning the expected number of fields?'''
-        item = get_single_element_json('veg_pi', 11, self)
+        item = get_single_element_json('veg_pi', 23, self)
         self.assertIsNotNone(item['point_number'])
 
     def test_veg_basal_01(self):
         '''Is the /veg_basal endpoint returning the expected number of fields?'''
-        item = get_single_element_json('veg_basal', 9, self)
+        item = get_single_element_json('veg_basal', 21, self)
         self.assertTrue(item['basal_area'])
 
 def build_url(suffix):
