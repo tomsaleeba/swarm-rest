@@ -51,6 +51,8 @@ services:
   db:
     image: postgres:10
     container_name: swarmrest_db
+    ports:
+      - "5432:5432" # for field team SQL access
     environment:
       POSTGRES_DB: ${DB_NAME}
       POSTGRES_USER: ${DB_USER}
