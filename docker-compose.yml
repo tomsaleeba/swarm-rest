@@ -19,7 +19,7 @@ services:
         max-size: 100m
 
   filter_proxy:
-    image: ternandsparrow/nginx-filter-proxy:1.7.0
+    image: ternandsparrow/nginx-filter-proxy:1.7.1
     container_name: swarmrest_filter_proxy
     init: true
     ports:
