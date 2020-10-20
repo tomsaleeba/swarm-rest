@@ -1,0 +1,17 @@
+version: '3'
+services:
+  theserver:
+    image: bitnami/express
+    volumes:
+      - ./app:/app
+    entrypoint: node /app/index.js
+  nginx_filter_proxy:
+    build: ..
+    links:
+      - theserver:theserver
+    ports:
+      - 30000:80
+    environment:
+      TARGET_SERVER: 'theserver:3000'
+      DNS_NAME: some.host
+      #NO_CACHE: 1 # uncomment to disable cache

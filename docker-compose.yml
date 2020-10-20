@@ -19,7 +19,8 @@ services:
         max-size: 100m
 
   filter_proxy:
-    image: ternandsparrow/nginx-filter-proxy:1.7.1
+    build: ./nginx-filter-proxy/
+    image: ternandsparrow/nginx-filter-proxy:deploy
     container_name: swarmrest_filter_proxy
     init: true
     ports:
@@ -38,7 +39,7 @@ services:
 
   metadata_dictionary_server:
     build: ./ausplots-metadata-dictionary-server
-    image: ternandsparrow/ausplots-metadata-dictionary-server:dev
+    image: ternandsparrow/ausplots-metadata-dictionary-server:deploy
     container_name: swarmrest_metadict
     restart: unless-stopped
     environment:

@@ -2,7 +2,8 @@
 version: '3.7'
 services:
   stats_facade:
-    image: ternandsparrow/swarm-rest-metrics-facade:2.1.1
+    build: ./metrics-facade/
+    image: ternandsparrow/swarm-rest-metrics-facade:deploy
     container_name: swarmrest_stats_facade
     links:
       - server:server
@@ -57,7 +58,7 @@ services:
         max-size: 100m
 
   es_snapshot:
-    build: ./es-snapshot
+    build: ./es-snapshot/
     image: ternandsparrow/swarm-rest-es-snapshot:dev
     container_name: swarmrest_es_backup
     links:
