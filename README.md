@@ -279,6 +279,11 @@ cat swarmrest.backup | docker exec -i swarmrest_db sh -c 'pg_restore -v -U $POST
 # now you need to run the script.sql again
 ```
 
+## Cleaning the ElasticSearch index
+If you find our metrics are polluted by HTTP requests that aren't real users,
+you can user the `helper-scripts/clean-es-index.html` tool to help clean it.
+Just open the file in your browser and it'll tell you what to do.
+
 ## Known problems
   1. Kibana has no auth so we can't open it to the public yet
   1. sometimes ES dies inside the ELK stack but Docker can't see it. We're using a health check and the

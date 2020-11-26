@@ -1,0 +1,197 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width" />
+  <title>Clean ES index</title>
+  <style type="text/css" media="screen">
+    .url-input {
+      width: 40em;
+    }
+  </style>
+</head>
+
+<body>
+  <h1>What is this?</h1>
+  <p>A tool to help clean out the ElasticSearch index from requests that don't
+    count as real users. Being in HTML means we get a UI and the ability to make
+    HTTP requests out-of-the-box (is it too much to ask node and python?).</p>
+  <h1>How to use</h1>
+  <h3>SSH tunnel</h3>
+  <p>We don't have security on ElasticSearch so we can't expose it to the
+    public. The workaround for that is to use an SSH tunnel and connect to the
+    port on your local machine. You can do that with the following command
+    assuming that 30001 is port to use on your local machine, 9200 is the port
+    ES is listening on on the remote and the remote machine SSH details are
+    ubuntu@es-host.<br /><code>ssh -nNT -L 30001:localhost:9200 ubuntu@es-host</code>
+  </p>
+  <h3>CORS proxy</h3>
+  <p>Next problem, ES doesn't seem to do CORS. We can't
+    use a public CORS proxy because we need to connect to the port on our local
+    machine, so we have to run our own proxy. Use <a href="https://github.com/Rob--W/cors-anywhere">cors-anywhere</a>.</p>
+  <ol>
+    <li>Install cors-anywhere</li>
+    <li>At the time of writing, it doesn't install a binary so launch it with
+      `node ./node_modules/cors-anywhere/server.js`.</li>
+    <li>Now you can use that to prefix the URL for your SSH tunnel, like
+      "http://localhost:8080/http://localhost:30001/swarm-rest/_search".</li>
+  </ol>
+  <h3>Then to use this tool</h3>
+  <ol>
+    <li>Get a list of HTTP URL resource that are possibly garbage</li>
+    <li>For each resource, choose to delete all records using that resource with
+      the button</li>
+  </ol>
+  <div id="app">
+    <h1 @click="doEasterEggClick">The tool</h1>
+    <p><strong>Beware: you are modifying the index. There are backups but think
+        before acting.</strong></p>
+    <p>
+      <label>
+        Base URL of ElasticSearch
+        <input v-model="baseUrl" class="url-input" />
+      </label><br />
+      <label>
+        ElasticSearch index
+        <input v-model="theIndex" />
+      </label><br />
+      <button @click="getResources">Step 1: Get resources</button>
+    </p>
+    <table>
+      <thead>
+        <tr>
+          <td>Action</td>
+          <td>Count</td>
+          <td>Resource</td>
+        </tr>
+      </thead>
+      <tbody>
+        <tr v-for="curr of resourceSummaries" :key="curr.key">
+          <td>
+            <span v-if="curr.isDeleted">Deleted</span>
+            <button v-else @click="doDelete(curr.key)">Delete</button>
+          </td>
+          <td>{{curr.doc_count}}</td>
+          <td>{{curr.key}}</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+  <script src="https://cdn.jsdelivr.net/npm/vue@2/dist/vue.js"></script>
+  <script>
+    new Vue({
+      el: '#app',
+      data() {
+        return {
+          baseUrl: (() => {
+            const corsAnywhereProxy = 'http://localhost:8080/'
+            const sshTunnel = 'http://localhost:30002/'
+            return corsAnywhereProxy + sshTunnel
+          })(),
+          theIndex: 'swarm-rest',
+          resourceSummaries: []
+        }
+      },
+      methods: {
+        async doDelete(res) {
+          const url = `${this.baseUrl}/${this.theIndex}/_delete_by_query`
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: {
+                match: {
+                  'resource.keyword': res
+                }
+              }
+            })
+          })
+          console.log(await resp.text())
+          const foundIndex = this.resourceSummaries.findIndex(e => e.key === res)
+          if (!~foundIndex) {
+            alert('Could not find ' + res + ' in the list')
+            return
+          }
+          this.resourceSummaries[foundIndex].isDeleted = true
+        },
+        async getResources() {
+          const url = `${this.baseUrl}/${this.theIndex}/_search`
+          const theKey = 'theThingys'
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-type': 'application/json',
+            },
+            body: JSON.stringify(getSearchReqBody(theKey, 100))
+          })
+          const respBody = await resp.json()
+          this.resourceSummaries =
+            respBody.aggregations[theKey].buckets.map(e => ({
+              ...e,
+              isDeleted: false
+            }))
+        },
+        async doEasterEggClick() {
+          return
+          const url = `${this.baseUrl}/${this.theIndex}/_delete_by_query`
+          const resp = await fetch(url, {
+            method: 'POST',
+            headers: {
+              'Content-type': 'application/json',
+            },
+            body: JSON.stringify({
+              query: {
+                prefix: {
+                  'resource.keyword': '/m/data/place'
+                }
+              }
+            })
+          })
+          console.log(await resp.json())
+        }
+      }
+    })
+
+    function getSearchReqBody(someSearchNameThing, pageSize) {
+      return {
+        "aggs": {
+          [someSearchNameThing]: {
+            "terms": {
+              "field": "resource.keyword",
+              "size": pageSize,
+              "order": {
+                "_count": "desc"
+              },
+              "exclude": buildExcludeRegex()
+            }
+          }
+        }
+      }
+    }
+
+    function buildExcludeRegex() {
+      return "/(" + [
+        // FIXME if we introduce new endpoints, add them here
+        '.*_unpub',
+        'ausplots_stats',
+        'om_.*',
+        'ross',
+        's2s_study_location',
+        'samples',
+        'search',
+        'site',
+        'soil_(bulk_density|subsite|characterisation)',
+        'structural_summary',
+        'veg_(pi|voucher|basal)',
+        'visit_summary',
+      ].join('|') + ")"
+    }
+    // dump the value for copy-paste friendly-ness
+    console.log(buildExcludeRegex())
+  </script>
+</body>
+
+</html>
