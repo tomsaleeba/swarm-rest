@@ -1,6 +1,15 @@
 This is a Flask server that can serve up a chart of cumulative user growth of
 AusplotsR users over time. The result looks like:
 
+# Why
+We can use Kibana to make a lot of charts but I can't figure out how to do this
+one. We can make a cumulative chart with date based buckets on the x axis but
+the unique constraint (applied to the IP address) is only done per bucket. This
+means if we make the buckets one month each, and a user makes a request in two
+months, they'll be counted two times. We need to apply the unique constraint,
+then split the data into buckets. There might be a way but I couldn't figure it
+out. This works for now.
+
 ![](./users-over-time.png)
 
 # How to use it
