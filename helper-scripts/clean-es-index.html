@@ -9,6 +9,10 @@
     .url-input {
       width: 40em;
     }
+
+    body {
+      max-width: 960px;
+    }
   </style>
 </head>
 
@@ -16,7 +20,7 @@
   <h1>What is this?</h1>
   <p>A tool to help clean out the ElasticSearch index from requests that don't
     count as real users. Being in HTML means we get a UI and the ability to make
-    HTTP requests out-of-the-box (is it too much to ask node and python?).</p>
+    HTTP requests out-of-the-box (node and python, y u no have built-in HTTP?).</p>
   <h1>How to use</h1>
   <h3>SSH tunnel</h3>
   <p>We don't have security on ElasticSearch so we can't expose it to the
@@ -38,6 +42,8 @@
       "http://localhost:8080/http://localhost:30001/swarm-rest/_search".</li>
   </ol>
   <h3>Then to use this tool</h3>
+  <p><code>Don't be afraid to read the code of this tool. It's not polished, it's
+      meant for hackers.</code></p>
   <ol>
     <li>Get a list of HTTP URL resource that are possibly garbage</li>
     <li>For each resource, choose to delete all records using that resource with
@@ -67,6 +73,12 @@
         </tr>
       </thead>
       <tbody>
+        <tr v-if="searchState === 'initial'">
+          <td><code>(no search done yet)</code></td>
+        </tr>
+        <tr v-if="searchState === 'searched'">
+          <td><code>(searched, no results)</code></td>
+        </tr>
         <tr v-for="curr of resourceSummaries" :key="curr.key">
           <td>
             <span v-if="curr.isDeleted">Deleted</span>
@@ -90,52 +102,66 @@
             return corsAnywhereProxy + sshTunnel
           })(),
           theIndex: 'swarm-rest',
-          resourceSummaries: []
+          resourceSummaries: [],
+          searchState: 'initial'
         }
       },
       methods: {
         async doDelete(res) {
           const url = `${this.baseUrl}/${this.theIndex}/_delete_by_query`
-          const resp = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-type': 'application/json',
-            },
-            body: JSON.stringify({
-              query: {
-                match: {
-                  'resource.keyword': res
+          try {
+            const resp = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-type': 'application/json',
+              },
+              body: JSON.stringify({
+                query: {
+                  match: {
+                    'resource.keyword': res
+                  }
                 }
-              }
+              })
             })
-          })
-          console.log(await resp.text())
-          const foundIndex = this.resourceSummaries.findIndex(e => e.key === res)
-          if (!~foundIndex) {
-            alert('Could not find ' + res + ' in the list')
-            return
+            console.log(await resp.text())
+            const foundIndex = this.resourceSummaries.findIndex(e => e.key === res)
+            if (!~foundIndex) {
+              alert('Could not find ' + res + ' in the list')
+              return
+            }
+            this.resourceSummaries[foundIndex].isDeleted = true
+          } catch (err) {
+            const msg = 'Failed to make HTTP call, are you tunneling to ES (not Kibana)'
+            console.error(msg, err)
+            alert(msg + '. Check browser dev console for more details.')
           }
-          this.resourceSummaries[foundIndex].isDeleted = true
         },
         async getResources() {
+          this.searchState = 'searched'
           const url = `${this.baseUrl}/${this.theIndex}/_search`
           const theKey = 'theThingys'
-          const resp = await fetch(url, {
-            method: 'POST',
-            headers: {
-              'Content-type': 'application/json',
-            },
-            body: JSON.stringify(getSearchReqBody(theKey, 100))
-          })
-          const respBody = await resp.json()
-          this.resourceSummaries =
-            respBody.aggregations[theKey].buckets.map(e => ({
-              ...e,
-              isDeleted: false
-            }))
+          try {
+            const resp = await fetch(url, {
+              method: 'POST',
+              headers: {
+                'Content-type': 'application/json',
+              },
+              body: JSON.stringify(getSearchReqBody(theKey, 100))
+            })
+            const respBody = await resp.json()
+            this.resourceSummaries =
+              respBody.aggregations[theKey].buckets.map(e => ({
+                ...e,
+                isDeleted: false
+              }))
+          } catch (err) {
+            const msg = 'Failed to make HTTP call, are you tunneling to ES (not Kibana)'
+            console.error(msg, err)
+            alert(msg + '. Check browser dev console for more details.')
+          }
         },
         async doEasterEggClick() {
-          return
+          if (1 === 1) return // only for people who read code, comment this line to enable
           const url = `${this.baseUrl}/${this.theIndex}/_delete_by_query`
           const resp = await fetch(url, {
             method: 'POST',

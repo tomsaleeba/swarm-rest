@@ -102,10 +102,16 @@ To start the stack:
      you have a way to connect to it, it's running on port 5601. This port can
      be changed in `.env`.
 
-Warning: the Kibana (ELK stack) instance has no security/auth so don't expose it to the internet. Or if you
-do, add some security. A nice way to connect to the Kibana dashboard on a VM without opening the firewall is
-to use SSH local port forwarding
+Warning: the Kibana (ELK stack) instance has no security/auth so **don't expose
+it to the internet**. Or if you do, add some security. A nice way to connect to
+the Kibana dashboard on a VM without opening the firewall is to use SSH local
+port forwarding
 (https://help.ubuntu.com/community/SSH/OpenSSH/PortForwarding#Local_Port_Forwarding).
+For example, use the following to open port `30001` locally that tunnels to
+`5601` (the Kibana port) on the remote server (replace with the real host):
+```bash
+ssh -nNT -L 30001:localhost:5601 ubuntu@<swarm-rest host>
+```
 
 ## Running health check tests
 
@@ -281,7 +287,7 @@ cat swarmrest.backup | docker exec -i swarmrest_db sh -c 'pg_restore -v -U $POST
 
 ## Cleaning the ElasticSearch index
 If you find our metrics are polluted by HTTP requests that aren't real users,
-you can user the `helper-scripts/clean-es-index.html` tool to help clean it.
+you can use the `helper-scripts/clean-es-index.html` tool to help clean it.
 Just open the file in your browser and it'll tell you what to do.
 
 ## Known problems
