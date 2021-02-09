@@ -85,7 +85,7 @@ services:
         max-size: 100m
 
   db_sync:
-    image: ternandsparrow/pgsync:v0.3.6_2
+    image: ternandsparrow/pgsync:v0.3.6_3
     container_name: swarmrest_db_sync
     links:
       - db:db
@@ -101,6 +101,7 @@ services:
       TO_PORT: 5432
       TO_DB: ${DB_NAME}
       CRON_SCHEDULE: ${DB_SYNC_CRON_SCHEDULE}
+      SENTRY_DSN: ${SENTRY_DSN}
     restart: unless-stopped
     logging:
       driver: "json-file"
