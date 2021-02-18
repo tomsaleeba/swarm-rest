@@ -1,4 +1,5 @@
-> RESTful HTTP API to serve up Ausplots data from a postgres database using postgREST
+> RESTful HTTP API to serve up Ausplots data from a postgres database using
+> postgREST
 
 This directory contains the files required to run the HTTP REST API server that
 the [ausplotsR client](https://github.com/ternaustralia/ausplotsR) talks to.
@@ -6,19 +7,22 @@ the [ausplotsR client](https://github.com/ternaustralia/ausplotsR) talks to.
 The DB init script (`script.sql`) does a number of things:
   1. create a schema just for the API, named `api`
   1. create a role that can SELECT from (only) the `api` schema
-  1. create a number of views in the `api` schema that pull from tables in the `public` schema
+  1. create a number of views in the `api` schema that pull from tables in the
+     `public` schema
 
-postgREST will then serve everything from the `api` schema and because they're just views, they'll be read-only.
+postgREST will then serve everything from the `api` schema and because they're
+just views, they'll be read-only.
 
-We collect usage metrics on the service by intercepting all traffic to the API and then store these metrics in
-ElasticSearch. Kibana is included for visualising the usage. The ES data is also periodcally snapshotted onto
-S3 for safe keeping.
+We collect usage metrics on the service by intercepting all traffic to the API
+and then store these metrics in ElasticSearch. Kibana is included for
+visualising the usage. The ES data is also periodcally snapshotted onto S3 for
+safe keeping.
 
-As this is just a mirror of production, we have a container to periodically synchronise the data in SWARM
-production into our DB.
+As this is just a mirror of production, we have a container to periodically
+synchronise the data in SWARM production into our DB.
 
-We also have a read-only user auto-created so the DB can be used as a safe way to share a fresh-ish mirror of
-production.
+We also have a read-only user auto-created so the DB can be used as a safe way
+to share a fresh-ish mirror of production.
 
 ## Running the stack
 
@@ -35,7 +39,9 @@ Make sure you meet the requirements:
 To start the stack:
 
   1. clone this repo and `cd` into the workspace
-  1. [allow more virtual memory](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html#vm-max-map-count) on the host (ES needs this)
+  1. [allow more virtual
+     memory](https://www.elastic.co/guide/en/elasticsearch/reference/current/vm-max-map-count.html#vm-max-map-count)
+     on the host (ES needs this)
       ```bash
       echo vm.max_map_count=262144 | sudo tee -a /etc/sysctl.conf # only run this once for a host
       sudo sysctl -p # read the new config
@@ -45,7 +51,8 @@ To start the stack:
       cp start-or-restart.sh.example start-or-restart.sh
       chmod +x start-or-restart.sh
       ```
-  1. edit the runner script `start-or-restart.sh` to define the needed sensitive environmental variables
+  1. edit the runner script `start-or-restart.sh` to define the needed sensitive
+     environmental variables
       ```bash
       vim start-or-restart.sh
       ```
@@ -80,8 +87,9 @@ To start the stack:
       ```bash
       ./helper-scripts/data-only-sync.sh
       ```
-  1. connect as a superuser and run the `./script.sql` file to create all required objects for the API to run.
-     See section 'Modifying our copy of the schema' for more discussion about re-running.
+  1. connect as a superuser and run the `./script.sql` file to create all
+     required objects for the API to run.  See section 'Modifying our copy of
+     the schema' for more discussion about re-running.
       ```bash
       ./helper-scripts/recreate-api-views.sh
       ```
@@ -92,7 +100,8 @@ To start the stack:
       success
       (1 row)
       ```
-  1. if you're re-creating a prod instance, check the section below about restoring ES snapshots
+  1. if you're re-creating a prod instance, check the section below about
+     restoring ES snapshots
   1. use the service
       ```bash
       curl -v '<hostname:port>/site?limit=1'
@@ -115,8 +124,9 @@ ssh -nNT -L 30001:localhost:5601 ubuntu@<swarm-rest host>
 
 ## Running health check tests
 
-There are some brief health check tests you can run against a live service to make sure it's returning what
-you expect. First, make sure you satisfy the requirements:
+There are some brief health check tests you can run against a live service to
+make sure it's returning what you expect. First, make sure you satisfy the
+requirements:
 
   1. python 2.7
   1. python `requests`
@@ -147,12 +157,14 @@ reason, you can recover by killing the PG container and starting again:
       ```bash
       docker volume rm swarm-rest_swarm-pgdata
       ```
-  1. continue with the steps in the initial setup starting from running the `start-or-restart.sh` script
+  1. continue with the steps in the initial setup starting from running the
+     `start-or-restart.sh` script
 
 ## Stopping the stack
-The stack is designed to always keep running, even after a server restart, until you manually stop it. The
-data for postgres and ElasticSearch are stored in Docker data volumes. This means you can stop and destroy the
-stack, but **keep the data** with:
+The stack is designed to always keep running, even after a server restart, until
+you manually stop it. The data for postgres and ElasticSearch are stored in
+Docker data volumes. This means you can stop and destroy the stack, but **keep
+the data** with:
 ```bash
 docker-compose down
 ```
@@ -200,9 +212,11 @@ interact with AWS S3 for out snapshots.
 
 ## Restoring ElasticSearch snapshots
 
-The name of the snapshot repo is defined in the `.env` file as `ES_SNAPSHOT_REPO`. For this example, let's
-assume that it's `swarm-s3-backup`. Also, as we don't expose the ES instance to the public internet, you'll
-need to run these command on the docker host to have access (or through an SSH tunnel if you're fancy).
+The name of the snapshot repo is defined in the `.env` file as
+`ES_SNAPSHOT_REPO`. For this example, let's assume that it's `swarm-s3-backup`.
+Also, as we don't expose the ES instance to the public internet, you'll need to
+run these command on the docker host to have access (or through an SSH tunnel if
+you're fancy).
 
   1. let's list all the available snapshots
       ```console
@@ -240,8 +254,9 @@ need to run these command on the docker host to have access (or through an SSH t
         }
       }
       ```
-  1. if you get an error that indicies are already open, you can remove the ES container and its volume, then
-     create a fresh one to start from a clean slate:
+  1. if you get an error that indicies are already open, you can remove the ES
+     container and its volume, then create a fresh one to start from a clean
+     slate:
       ```bash
       docker rm -f swarmrest_elk
       docker volume rm swarm-rest_elk-data
@@ -263,7 +278,8 @@ Run the script we have to help you with this:
 ```
 
 ## Connect to DB with psql
-You can connect to the DB as the superuser if you SSH to the docker host, then run:
+You can connect to the DB as the superuser if you SSH to the docker host, then
+run:
 ```bash
 ./helper-scripts/psql.sh
 ```
@@ -292,8 +308,12 @@ Just open the file in your browser and it'll tell you what to do.
 
 ## Known problems
   1. Kibana has no auth so we can't open it to the public yet
-  1. sometimes ES dies inside the ELK stack but Docker can't see it. We're using a health check and the
-     autoheal container but as an alternative we could go for the official, separate images for Kibana and ES
-     so they're PID 1 and can be monitored and bounced by docker if they die.
-  1. consider adding fail2ban to the stack to help nginx provide protection. Maybe something like https://github.com/crazy-max/docker-fail2ban but that writes error.log to stderr so that needs to be piped into file too so f2b can read it.
+  1. sometimes ES dies inside the ELK stack but Docker can't see it. We're using
+     a health check and the autoheal container but as an alternative we could go
+     for the official, separate images for Kibana and ES so they're PID 1 and
+     can be monitored and bounced by docker if they die.
+  1. consider adding fail2ban to the stack to help nginx provide protection.
+     Maybe something like https://github.com/crazy-max/docker-fail2ban but that
+     writes error.log to stderr so that needs to be piped into file too so f2b
+     can read it.
 
