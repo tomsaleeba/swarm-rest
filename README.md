@@ -141,6 +141,40 @@ For example, you could pass a URL like
 ./tests/tests.py http://swarmapi.ausplots.aekos.org.au
 ```
 
+## Exposing unpublished data
+The database will store *all* Ausplots data; both published and unpublished. The
+flag for published is what this API needs to use to decide who gets access to
+what.
+
+We achieve this by creating DB views with a `_inc_unpub` suffix that include all
+data. We then create another view on top with no suffix and this excludes the
+unpublished data.
+
+Now we can assign different auth roles to the different views. Have a look in
+[`script.sql`](./script.sql) for the `GRANT SELECT ON...` statements (probably
+near the bottom). You'll see the names of the roles that are given access to
+each set of views.
+
+Users with no auth, i.e. the public, will be identified by the role that is
+configured as the anonymous role in
+[`docker-compose.yml`](./docker-compose.yml). Look for the `PGRST_DB_ANON_ROLE`
+env var for the postgREST service.
+
+The way that users gain a higher authorization to access unpublished data is by
+sending a JWT with their request. The JWT must include a `role` claim and the
+value of `role` is what will be checked by postgREST to see if the user can
+access a given view. Looking at those `GRANT` statements in `script.sql` again,
+you'll see the name of the role that has access to the `_inc_unpub` views. The
+other piece of the puzzle is that the JWT must be signed with a shared secret.
+The value of this secret is configured by the `PGRST_JWT_SECRET` env var in
+`docker-compose.yml`.
+
+So with those `role` and `secret` values, you can generate a JWT to use as a
+client to this service. At the time of writing, the ausplotsR client does it
+[here](https://github.com/ternaustralia/ausplotsR/blob/820f235/R/ausplots_queries.r#L15)
+(note: this link is pinned to a specific commit. Be sure to look at the latest
+version of the code).
+
 ## Modifying our copy of the schema
 In the set up steps, we first sync the schema, then sync the data then run our
 script to create the bits we need. Future data syncs won't touch the schema,
