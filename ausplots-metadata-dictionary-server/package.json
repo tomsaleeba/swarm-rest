@@ -5,7 +5,7 @@
     "start:debug": "node --inspect-brk index.js | pino-pretty",
     "start:prod": "node index.js",
     "start:watch": "nodemon --ext js,mjs,json --delay 2 --watch index.js --watch package.json --exec bash -c 'yarn start'",
-    "lint": "prettier --check index.js"
+    "lint": "eslint './**/*.js'"
   },
   "dependencies": {
     "@sentry/node": "^5.22.3",
@@ -16,6 +16,10 @@
     "pino": "^6.5.1"
   },
   "devDependencies": {
+    "@babel/core": "^7.12.17",
+    "@babel/eslint-parser": "^7.12.1",
+    "@babel/preset-env": "^7.12.17",
+    "eslint": "^7.19.0",
     "nodemon": "^2.0.4",
     "pino-pretty": "^4.2.0",
     "prettier": "^2.1.1"

@@ -1,4 +1,3 @@
-const util = require('util')
 const express = require('express')
 const axios = require('axios')
 const pino = require('pino')
@@ -348,10 +347,10 @@ app.listen(port, () => {
     Sentry DSN:           ${sentryDsn}`)
 })
 
-function sentryWarn(obj) {
+function sentryWarn(msg) {
   logger.warn(msg)
   Sentry.withScope(scope => {
     scope.setLevel('warning')
-    Sentry.captureException(obj)
+    Sentry.captureException(msg)
   })
 }
