@@ -18,9 +18,9 @@ jobs:
     - name: Set up Node
       uses: actions/setup-node@v1
       with:
-        node-version: '12.x'
-    - name: Install dependencies
+        node-version: '14.x'
+    - name: Install dependencies and lint
       run: |
+        cd ./ausplots-metadata-dictionary-server/
         yarn install --frozen-lockfile
-    - name: Lint
-      run: yarn lint
+        yarn lint
