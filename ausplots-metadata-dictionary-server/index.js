@@ -103,6 +103,7 @@ async function parseData(data) {
   ]
   const ignoreList = [
     `${p}/9dc8290e-ce1f-48b3-a6d3-78acf1f56b7b`, // Miscellaneous
+    `${p}/1e3327d0-e572-4c6b-8836-b4e226adc089`, // Vegetation strata values
   ]
   const variables = varsToProcess.reduce((accum, currVarId) => {
     const currVar = getEntityFromGraph(graph, currVarId)
