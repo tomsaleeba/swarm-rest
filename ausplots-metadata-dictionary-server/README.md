@@ -14,9 +14,17 @@
       # alternatively you can override where the data is pulled from
       JSONLD_URL=http://localhost:8080/test.json yarn start:watch
       ```
+  1. use the service
+      ```bash
+      curl localhost:3000/ -H 'accept:application/json'
+      ```
 
 # How to deploy
-Launch with:
-```bash
-yarn start:prod
-```
+  1. Launch with:
+      ```bash
+      yarn start:prod
+      ```
+  1. use the service
+      ```bash
+      curl localhost:3000/ -H 'accept:application/json'
+      ```
