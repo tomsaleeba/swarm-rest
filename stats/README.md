@@ -27,10 +27,11 @@ on the machine that is running ES.
       ```bash
       pip install -r requirements.txt
       ```
-  1. start the server
+  1. start the server (read `main.py` code for default values)
       ```bash
       python main.py
-      # OR, if you want to specify the ElasticSearch server
+      # OR, if you want to specify the ElasticSearch server because you're
+      # running this on a remote server and connecting via SSH tunnel
       ES_URL_PREFIX=http://localhost:30002 python main.py
       ```
   1. grab the address from the output from the previous command:
