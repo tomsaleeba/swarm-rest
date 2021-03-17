@@ -31,6 +31,7 @@ services:
       METADATA_SERVER: 'metadata_dictionary_server:3000'
       DNS_NAME: ${PUBLIC_DNS_NAME}
       NO_CACHE: ${IS_DISABLE_HTTP_CACHE:-}
+      UPSTREAM_TIMEOUT: 900 # 15 minutes
     restart: unless-stopped
     logging:
       driver: "json-file"
@@ -50,8 +51,9 @@ services:
         max-size: 100m
 
   db:
-    image: postgres:10
+    image: postgres:13
     container_name: swarmrest_db
+    init: true
     ports:
       - "5432:5432" # for field team SQL access
     environment:
@@ -87,6 +89,7 @@ services:
   db_sync:
     image: ternandsparrow/pgsync:v0.3.6_3
     container_name: swarmrest_db_sync
+    init: true
     links:
       - db:db
     environment:
