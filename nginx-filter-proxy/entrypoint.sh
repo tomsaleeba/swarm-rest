@@ -75,7 +75,9 @@ http {
             proxy_pass              http://target-server;
             proxy_redirect          off;
             proxy_cache             $cacheSwitchFragment;
-            proxy_cache_valid       any 10m;
+            proxy_cache_valid       any 120m;
+            proxy_cache_use_stale   error timeout http_500 http_502 http_503 http_504;
+            proxy_cache_background_update on;
             proxy_cache_key         \$scheme\$proxy_host\$request_uri\$is_args\$args\$http_accept\$http_authorization; # add Accept and Auth header to key
             proxy_set_header        Host \$host;
             proxy_set_header        X-Real-IP \$remote_addr;
@@ -85,6 +87,8 @@ http {
             proxy_send_timeout      $upstreamTimeout;
             proxy_read_timeout      $upstreamTimeout;
             send_timeout            $upstreamTimeout;
+
+            add_header              X-Nginx-Cache-Status \$upstream_cache_status;
 
             limit_except GET {
                 deny all;
